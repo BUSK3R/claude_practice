@@ -1,0 +1,4 @@
+handwriting_digit_recognition/data/
+handwriting_digit_recognition/__pycache__/
+__pycache__/
+*.pyc
