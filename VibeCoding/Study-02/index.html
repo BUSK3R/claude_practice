@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>할 일 관리</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>할 일 관리</h1>
+      <div class="progress-area">
+        <div class="progress-info">
+          <span id="progress-label">전체 진행률</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </header>
+
+    <form id="todo-form" class="todo-form">
+      <input
+        type="text"
+        id="todo-input"
+        class="todo-input"
+        placeholder="할 일을 입력하세요"
+        autocomplete="off"
+      />
+      <select id="category-select" class="category-select">
+        <option value="업무">업무</option>
+        <option value="개인">개인</option>
+        <option value="공부">공부</option>
+      </select>
+      <button type="submit" class="add-btn">추가</button>
+    </form>
+
+    <nav class="filter-tabs">
+      <button class="filter-btn active" data-filter="전체">전체</button>
+      <button class="filter-btn" data-filter="업무">업무</button>
+      <button class="filter-btn" data-filter="개인">개인</button>
+      <button class="filter-btn" data-filter="공부">공부</button>
+    </nav>
+
+    <main class="todo-main">
+      <ul id="todo-list" class="todo-list"></ul>
+      <p id="empty-state" class="empty-state">표시할 항목이 없습니다. 할 일을 추가해보세요!</p>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
