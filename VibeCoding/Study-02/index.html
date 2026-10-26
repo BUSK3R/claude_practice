@@ -8,18 +8,20 @@
 </head>
 <body>
   <div class="app">
+    <p id="storage-warning" class="storage-warning" role="alert" hidden>저장이 되지 않아요</p>
+
     <header class="app-header">
       <h1>할 일 관리</h1>
-      <div class="progress-area">
-        <div class="progress-info">
-          <span id="progress-label">전체 진행률</span>
-          <span id="progress-percent">0%</span>
-        </div>
-        <div class="progress-bar">
-          <div id="progress-fill" class="progress-fill"></div>
-        </div>
-      </div>
+      <!-- 오늘 날짜가 표시될 자리 (JS로 채울 예정) -->
+      <p id="today" class="today"></p>
     </header>
+
+    <section class="progress" aria-label="진행률">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="progress-text" class="progress-text">0 / 0 완료 (0%)</p>
+    </section>
 
     <form id="todo-form" class="todo-form">
       <input
@@ -27,27 +29,33 @@
         id="todo-input"
         class="todo-input"
         placeholder="할 일을 입력하세요"
+        maxlength="100"
         autocomplete="off"
       />
-      <select id="category-select" class="category-select">
-        <option value="업무">업무</option>
-        <option value="개인">개인</option>
-        <option value="공부">공부</option>
+      <select id="category-select" class="category-select" aria-label="카테고리">
+        <option value="auto">자동 분류</option>
+        <option value="work">업무</option>
+        <option value="personal">개인</option>
+        <option value="study">공부</option>
       </select>
       <button type="submit" class="add-btn">추가</button>
     </form>
 
-    <nav class="filter-tabs">
-      <button class="filter-btn active" data-filter="전체">전체</button>
-      <button class="filter-btn" data-filter="업무">업무</button>
-      <button class="filter-btn" data-filter="개인">개인</button>
-      <button class="filter-btn" data-filter="공부">공부</button>
+    <nav class="filter-tabs" aria-label="카테고리 필터">
+      <button type="button" class="filter-btn active" data-filter="all">전체</button>
+      <button type="button" class="filter-btn" data-filter="work">업무</button>
+      <button type="button" class="filter-btn" data-filter="personal">개인</button>
+      <button type="button" class="filter-btn" data-filter="study">공부</button>
     </nav>
 
     <main class="todo-main">
       <ul id="todo-list" class="todo-list"></ul>
-      <p id="empty-state" class="empty-state">표시할 항목이 없습니다. 할 일을 추가해보세요!</p>
+      <p id="empty-state" class="empty-state">할 일이 없어요. 위에서 추가해 보세요.</p>
     </main>
+
+    <footer class="app-footer">
+      <button type="button" id="clear-completed" class="clear-btn">완료 항목 모두 삭제</button>
+    </footer>
   </div>
 
   <script src="app.js"></script>
