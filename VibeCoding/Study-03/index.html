@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>상식 퀴즈</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+
+    <!-- 1. 시작 -->
+    <section id="screen-start" class="screen">
+      <h1 class="title">상식 퀴즈</h1>
+      <ul class="rules">
+        <li>한국사 · 과학 · 지리 · 일반상식 <strong>4개 카테고리</strong></li>
+        <li>카테고리당 10문제, 총 <strong>40문제</strong></li>
+        <li>보기 4개 중 정답을 고르세요</li>
+      </ul>
+      <label class="field" for="nickname">닉네임 (최대 10자)</label>
+      <input id="nickname" class="input" type="text" maxlength="10" placeholder="닉네임을 입력하세요" autocomplete="off">
+      <p id="nickname-error" class="error" role="alert" hidden>닉네임을 입력해 주세요.</p>
+      <button id="btn-start" class="btn btn-primary" type="button">시작하기</button>
+      <button id="btn-start-ranking" class="btn btn-secondary" type="button">순위표 보기</button>
+      <p class="notice">퀴즈 도중 새로고침하면 진행 상황이 사라져요</p>
+    </section>
+
+    <!-- 2. 퀴즈 -->
+    <section id="screen-quiz" class="screen" hidden>
+      <div class="quiz-head">
+        <span id="quiz-category" class="badge">카테고리</span>
+        <span class="score">점수 <strong id="quiz-score">0</strong></span>
+      </div>
+      <div class="progress-row">
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0">
+          <div id="quiz-progress-bar" class="progress-bar"></div>
+        </div>
+        <span id="quiz-progress-text" class="progress-text">1 / 40</span>
+      </div>
+      <h2 id="quiz-question" class="question">문제가 여기에 표시됩니다.</h2>
+      <div id="quiz-choices" class="choices">
+        <button class="choice" type="button"></button>
+        <button class="choice" type="button"></button>
+        <button class="choice" type="button"></button>
+        <button class="choice" type="button"></button>
+      </div>
+      <div id="quiz-explanation" class="explanation" aria-live="polite" hidden></div>
+      <button id="btn-next" class="btn btn-primary" type="button" disabled>다음</button>
+    </section>
+
+    <!-- 3. 카테고리 요약 -->
+    <section id="screen-summary" class="screen" hidden>
+      <p class="summary-label">카테고리 완료</p>
+      <h2 id="summary-text" class="summary-score">한국사 8 / 10</h2>
+      <button id="btn-continue" class="btn btn-primary" type="button">계속</button>
+    </section>
+
+    <!-- 4. 결과 -->
+    <section id="screen-result" class="screen" hidden>
+      <h2 class="screen-title">결과</h2>
+      <p class="total-score"><strong id="result-total">0</strong> / 400점</p>
+      <ul id="result-categories" class="category-scores"></ul>
+      <p id="result-rank" class="result-rank">이번 판 순위: -</p>
+      <p id="result-save-warning" class="error save-warning" hidden>순위가 저장되지 않아요</p>
+      <h3 class="sub-title">오답 복습</h3>
+      <div id="result-review" class="review"></div>
+      <button id="btn-retry" class="btn btn-primary" type="button">다시 도전</button>
+      <button id="btn-result-ranking" class="btn btn-secondary" type="button">순위표 보기</button>
+    </section>
+
+    <!-- 5. 순위표 -->
+    <section id="screen-ranking" class="screen" hidden>
+      <h2 class="screen-title">순위표 TOP 10</h2>
+      <table class="ranking-table">
+        <thead>
+          <tr><th>순위</th><th>닉네임</th><th>총점</th><th>날짜</th></tr>
+        </thead>
+        <tbody id="ranking-body"></tbody>
+      </table>
+      <p id="ranking-my-rank" class="result-rank" hidden></p>
+      <button id="btn-ranking-back" class="btn btn-secondary" type="button">돌아가기</button>
+    </section>
+
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

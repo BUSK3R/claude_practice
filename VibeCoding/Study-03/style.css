@@ -1,0 +1,183 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --text: #1f2430;
+  --muted: #667085;
+  --border: #d9dde5;
+  --primary: #3b5bdb;
+  --correct: #2b8a3e;
+  --correct-bg: #ebfbee;
+  --wrong: #e03131;
+  --wrong-bg: #fff0f0;
+
+  --cat-history: #b8651b;
+  --cat-science: #1c7ed6;
+  --cat-geography: #2f9e44;
+  --cat-general: #9c36b5;
+  --cat-color: var(--primary);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  line-height: 1.5;
+}
+
+[hidden] { display: none !important; }
+
+.app {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.screen {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.title { margin: 0 0 16px; text-align: center; font-size: 2rem; }
+.screen-title { margin: 0 0 16px; text-align: center; font-size: 1.5rem; }
+.sub-title { margin: 24px 0 8px; font-size: 1.1rem; }
+
+.rules { margin: 0 0 20px; padding-left: 20px; color: var(--muted); }
+.field { display: block; margin-bottom: 6px; font-weight: 600; }
+.input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+}
+.input:focus { outline: 2px solid var(--primary); border-color: transparent; }
+.notice { margin: 16px 0 0; text-align: center; font-size: 0.875rem; color: var(--muted); }
+
+/* 버튼 */
+.btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-secondary { background: #e9ecef; color: var(--text); }
+.btn:active { transform: scale(0.98); }
+
+/* 카테고리 색 (퀴즈 화면의 .screen 또는 .badge에 붙여 사용) */
+.cat-history   { --cat-color: var(--cat-history); }
+.cat-science   { --cat-color: var(--cat-science); }
+.cat-geography { --cat-color: var(--cat-geography); }
+.cat-general   { --cat-color: var(--cat-general); }
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--cat-color);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* 퀴즈 */
+.quiz-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.score { color: var(--muted); }
+.score strong { color: var(--text); font-size: 1.1rem; }
+
+.progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.progress { flex: 1; height: 10px; background: #e9ecef; border-radius: 999px; overflow: hidden; }
+.progress-bar { width: 0; height: 100%; background: var(--cat-color); transition: width 0.3s; }
+.progress-text { font-size: 0.875rem; color: var(--muted); white-space: nowrap; }
+
+.question { margin: 0 0 20px; font-size: 1.25rem; line-height: 1.5; word-break: keep-all; }
+
+.choices { display: grid; gap: 12px; }
+.choice {
+  position: relative;
+  width: 100%;
+  min-height: 60px;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+}
+.choice:hover:not(:disabled) { border-color: var(--cat-color); }
+.choice:disabled { cursor: default; }
+.choice:disabled:not(.correct):not(.wrong) { opacity: 0.55; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.error { margin: -4px 0 12px; color: var(--wrong); font-size: 0.9rem; }
+.review-item p { margin: 4px 0; }
+.review-question { font-weight: 700; }
+.explanation-head { margin: 0 0 4px; font-weight: 700; }
+.explanation-body { margin: 0; }
+.save-warning { margin: 8px 0 0; text-align: center; font-weight: 700; }
+
+/* 정답/오답: 색 + 아이콘 + 글자 (.choice 또는 .mark 요소에 사용) */
+.correct, .wrong { font-weight: 700; }
+.correct { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); }
+.wrong   { border-color: var(--wrong);   background: var(--wrong-bg);   color: var(--wrong); }
+.correct::after { content: "✔ 정답"; margin-left: 8px; font-size: 0.875rem; }
+.wrong::after   { content: "✘ 오답"; margin-left: 8px; font-size: 0.875rem; }
+
+.explanation {
+  margin-top: 16px;
+  padding: 14px;
+  border-left: 4px solid var(--cat-color);
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* 카테고리 요약 */
+#screen-summary { text-align: center; }
+.summary-label { margin: 0; color: var(--muted); }
+.summary-score { margin: 8px 0 12px; font-size: 2.2rem; }
+
+/* 결과 */
+.total-score { margin: 0 0 16px; text-align: center; font-size: 1.2rem; }
+.total-score strong { font-size: 3rem; }
+.category-scores { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.category-scores li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-left: 6px solid var(--cat-color);
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+.result-rank { margin: 0; text-align: center; font-weight: 700; }
+.review { display: grid; gap: 10px; }
+.review-item { padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+
+/* 순위표 */
+.ranking-table { width: 100%; border-collapse: collapse; text-align: center; }
+.ranking-table th, .ranking-table td { padding: 10px 6px; border-bottom: 1px solid var(--border); }
+.ranking-table { table-layout: fixed; }
+.ranking-table th:nth-child(1), .ranking-table td:nth-child(1) { width: 15%; }
+.ranking-table th:nth-child(3), .ranking-table td:nth-child(3) { width: 16%; }
+.ranking-table th:nth-child(4), .ranking-table td:nth-child(4) { width: 31%; font-size: 0.85rem; }
+.ranking-table td.nick { word-break: break-all; }
+.ranking-table tr.me { background: #fff3bf; font-weight: 700; }
+.ranking-table th { color: var(--muted); font-size: 0.875rem; }
+
+@media (max-width: 480px) {
+  .app { padding: 10px; }
+  .screen { padding: 20px 14px; }
+  .title { font-size: 1.7rem; }
+  .question { font-size: 1.15rem; }
+}
