@@ -1,3 +1,12 @@
 **/__pycache__/
 *.pyc
 VibeCoding/Study-01/handwriting_digit_recognition/data/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# excluded projects
+/example0/
+/voltque/
