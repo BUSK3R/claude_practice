@@ -30,7 +30,7 @@ Fridge-photo recipe app, built in 3 steps per `PRD_step1.md`..`PRD_step3.md` (Py
 
 ## Repository context
 
-`Study-04` sits in a git repo whose root is `C:\Users\User\Desktop\VibeCoding` (a `.gitignore` is at the root). Sibling directories `Study-01` to `Study-03` are independent study projects, each with its own `CLAUDE.md` and Korean `README.md`:
+`Study-04` sits in a git repo whose root is `C:\Users\User\Desktop\VibeCoding\VibeCoding` (the folder that directly contains `Study-01`..`Study-04`; a `.gitignore` is at the root). Run git commands from there or below, not from the outer `Desktop\VibeCoding`, which is no longer a repo. Sibling directories `Study-01` to `Study-03` are independent study projects, each with its own `CLAUDE.md` and Korean `README.md`:
 
 - `Study-01`: PyTorch MNIST handwriting digit recognition (`train.py`, `model.py`, `draw_and_predict.py`).
 - `Study-02`: vanilla HTML/CSS/JS todo app, no build step.
