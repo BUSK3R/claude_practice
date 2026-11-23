@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>냉장고 재료 인식</title>
+<style>
+  :root{--bg:#f7f7f5;--fg:#1d1d1b;--muted:#595954;--card:#fff;--line:#c9c9c4;--accent:#2f7d4f;--onaccent:#fff;--warn:#8a5200;--err:#b3261e;--focus:#1a5fd0}
+  @media (prefers-color-scheme:dark){:root{--bg:#161614;--fg:#eee;--muted:#b8b8b2;--card:#222220;--line:#555;--accent:#5fbf86;--onaccent:#0b1f13;--warn:#e0a040;--err:#f2867e;--focus:#7fb0ff}}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,"Malgun Gothic",sans-serif}
+  main{max-width:640px;margin:0 auto;padding:24px 16px}
+  h1{font-size:1.4rem;margin:0 0 4px} .lead{margin:0 0 16px;color:var(--muted);font-size:.9rem}
+  h2{font-size:1.05rem;margin:0 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+  #drop{border:2px dashed var(--line);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer}
+  #drop.over{border-color:var(--accent);background:var(--bg)}
+  #preview{max-width:100%;max-height:260px;border-radius:8px;display:none;margin:12px auto 0}
+  button{font:inherit;padding:8px 14px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+  button.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:600}
+  button:disabled{opacity:.55;cursor:default}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  ul{list-style:none;padding:0;margin:0}
+  li{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);min-height:20px}
+  li input{min-width:0}
+  li input.name{flex:2 1 140px} li input.qty{flex:1 1 90px}
+  li.low input{border-color:var(--warn);border-width:2px}
+  .tag{font-size:.75rem;color:var(--warn);white-space:nowrap;font-weight:600}
+  .status{margin:8px 0;min-height:1.5em} .status.err,.err{color:var(--err)}
+  .err:not(:empty)::before{content:"! ";font-weight:700}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:flex-end}
+  .hidden{display:none!important}
+  .field{display:flex;flex-direction:column;font-size:.85rem;gap:2px}
+  .hint{font-size:.85rem;color:var(--muted);margin:4px 0}
+  .busy{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .busy progress{flex:1 1 120px;min-width:0}
+  .recipe{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px}
+  .recipe h3{margin:0 0 4px;font-size:1.05rem} .meta{font-size:.85rem;color:var(--muted)}
+  .chip{display:inline-block;font-size:.8rem;padding:1px 8px;border-radius:99px;border:1px solid var(--line);margin:2px 4px 2px 0}
+  .chip.miss{border-color:var(--warn);color:var(--warn)}
+  .notice{font-size:.85rem;color:var(--warn);margin-top:12px}
+  .stale{color:var(--warn);font-weight:600;font-size:.9rem;margin:8px 0}
+  ol{padding-left:20px;margin:8px 0} ol li{display:list-item}
+  @media (max-width:480px){main{padding:16px 12px} .row .field{flex:1 1 calc(50% - 8px)} .row .field input,.row .field select{width:100%!important;box-sizing:border-box}}
+</style>
+</head>
+<body>
+<main>
+  <h1>냉장고 재료 인식</h1>
+  <p class="lead">냉장고 사진을 올리면 재료를 찾아 주고, 그 재료로 만들 수 있는 레시피 3가지를 추천합니다.</p>
+
+  <div class="card" id="profile">
+    <div id="profView"><span id="hello"></span> <button id="profEdit">프로필 수정</button></div>
+    <form id="profForm" class="hidden">
+      <strong id="profTitle">프로필 만들기</strong>
+      <p class="hint" id="profHint">레시피를 저장하려면 프로필이 필요합니다. 로그인은 없고, 이 컴퓨터에만 저장됩니다.</p>
+      <div class="row">
+        <label class="field">닉네임(최대 20자)<input id="nick" maxlength="20" required></label>
+        <label class="field">기본 인원수<input id="pServ" type="number" min="1" max="10" value="2" style="width:70px"></label>
+        <label class="field">못 먹는 재료(쉼표로 구분)<input id="pExcl" placeholder="예: 땅콩, 새우"></label>
+      </div>
+      <div class="row"><button class="primary" type="submit">프로필 저장하기</button><button type="button" id="profCancel" class="hidden">취소</button></div>
+      <div id="profMsg" role="status" class="err"></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>1. 냉장고 사진 올리기</h2>
+    <div id="drop" tabindex="0" role="button" aria-label="냉장고 사진 선택. 파일 선택 창이 열립니다">사진을 끌어다 놓거나 눌러서 선택<br><small>JPEG · PNG · WebP, 최대 10MB</small></div>
+    <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+    <img id="preview" alt="업로드한 사진 미리보기">
+    <div class="row"><button id="go" class="primary" disabled>사진에서 재료 찾기</button></div>
+    <div class="busy hidden" id="goProg"><progress aria-label="재료 인식 진행 중"></progress><span id="goElapsed" aria-hidden="true"></span><button id="goCancel" type="button">취소</button></div>
+    <div id="msg" class="status" role="status">사진을 고르면 위 버튼이 켜집니다. 사진이 없으면 아래 목록에 재료를 직접 입력해도 됩니다.</div>
+  </div>
+
+  <div class="card" id="result">
+    <h2>2. 재료 확인하기 <small id="model" class="meta"></small></h2>
+    <p class="hint" id="listHint">사진을 인식하면 여기에 재료가 채워집니다. 틀린 것은 고치거나 삭제하세요.</p>
+    <p class="hint hidden" id="lowHint">테두리가 진하고 "불확실"이 붙은 재료는 AI가 확신하지 못한 것입니다. 꼭 확인해 주세요.</p>
+    <ul id="list"></ul>
+    <div class="row">
+      <button id="add">+ 재료 추가</button>
+      <button id="confirm" class="primary">이 재료로 레시피 조건 정하기</button>
+    </div>
+    <div id="msgConfirm" class="status" role="status"></div>
+  </div>
+  <div class="card hidden" id="step2">
+    <h2>3. 레시피 조건 정하고 추천받기</h2>
+    <div class="hint">추천에 쓸 재료: <span id="confirmed"></span></div>
+    <div class="stale hidden" id="stale" role="status">위 재료 목록을 고쳤습니다. 고친 내용을 쓰려면 2단계의 "이 재료로 레시피 조건 정하기"를 다시 눌러 주세요.</div>
+    <div class="row">
+      <label class="field">인원수<input id="servings" type="number" min="1" max="10" value="2" style="width:70px"></label>
+      <label class="field">최대 조리시간(분)<input id="maxmin" type="number" min="5" max="240" placeholder="제한 없음" style="width:110px"></label>
+      <label class="field">난이도<select id="diff"><option value="">상관없음</option><option value="easy">쉬움</option><option value="medium">보통</option><option value="hard">어려움</option></select></label>
+      <label class="field">못 먹는 재료(쉼표로 구분)<input id="exclude" placeholder="예: 땅콩, 새우"></label>
+    </div>
+    <div class="row"><button id="rec" class="primary">레시피 3개 추천받기</button></div>
+    <div class="busy hidden" id="recProg"><progress aria-label="레시피 생성 진행 중"></progress><span id="recElapsed" aria-hidden="true"></span><button id="recCancel" type="button">취소</button></div>
+    <div id="msg2" class="status" role="status"></div>
+    <div id="recipes"></div>
+    <div class="notice hidden" id="notice">AI가 만든 레시피입니다. 알레르기와 익힘 정도는 직접 확인한 뒤 조리하세요.</div>
+  </div>
+  <div class="card" id="savedCard">
+    <h2>저장한 레시피</h2>
+    <div class="row"><input id="search" type="search" aria-label="저장한 레시피 검색" placeholder="제목이나 재료로 검색" style="flex:1"></div>
+    <div id="savedMsg" class="status" role="status"></div>
+    <div id="savedList"></div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const MAX_SIDE = 1280, MAX_BYTES = 10 * 1024 * 1024;
+const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+let blob = null, previewUrl = null;
+
+function say(id, text, err) { const e = $(id); e.textContent = text || ''; e.classList.toggle('err', !!err); }
+const setMsg = (t, err) => say('msg', t, err);
+
+// ---- 서버 통신: 오류를 사용자가 할 수 있는 행동 중심의 쉬운 말로 바꾼다 ----
+const FIELD = {file: '사진', servings: '인원수', max_minutes: '최대 조리시간', difficulty: '난이도', exclude: '못 먹는 재료',
+  ingredients: '재료 목록', nickname: '닉네임', prefs: '프로필 설정', recipe: '레시피', q: '검색어'};
+function friendly(status, detail, ctx) {
+  const text = typeof detail === 'string' ? detail : '';
+  if (status === 422 && Array.isArray(detail)) {
+    const names = [...new Set(detail.map(d => FIELD[(d && d.loc || []).find(x => FIELD[x])]).filter(Boolean))];
+    return names.length ? `다음 항목의 값을 확인해 주세요: ${names.join(', ')}.${names.some(n => n === '인원수' || n === '최대 조리시간') ? ' (인원수는 1~10명, 조리시간은 5~240분)' : ''}` :'입력한 값을 확인해 주세요.';
+  }
+  if ([404, 409, 413, 415, 422].includes(status) && text) return text;  // 서버가 이미 쉬운 말로 알려 주는 경우
+  if (status === 403) return '이 화면은 주소창이 http://127.0.0.1:8000 일 때만 사용할 수 있습니다. 주소를 확인해 주세요.';
+  if (status === 413) return '사진이 너무 큽니다. 더 작은 사진으로 다시 시도해 주세요.';
+  if (status === 415) return '읽을 수 없는 사진입니다. JPEG, PNG, WebP 사진인지 확인하고 다른 사진으로 시도해 주세요.';
+  if (status === 429) return '지금 무료 AI에 사용자가 몰려 있습니다. 1~2분 뒤에 같은 버튼을 다시 눌러 주세요.';
+  if (status === 504) return 'AI 응답이 너무 늦어져 중단했습니다. 인터넷 연결을 확인하고 잠시 뒤 다시 시도해 주세요.';
+  if (status === 502) return ctx === 'recognize'
+    ? 'AI가 사진에서 재료를 읽어내지 못했습니다. 다시 시도하거나, 아래 목록에 재료를 직접 입력해 주세요.'
+    : ctx === 'recipes' ? 'AI가 레시피를 만들지 못했습니다. 버튼을 한 번 더 눌러 보세요. 계속 안 되면 제외 재료나 난이도 조건을 줄여 보세요.'
+    : '일시적인 문제로 처리하지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+  if (status >= 500) return '서버에 문제가 있어 지금은 처리할 수 없습니다. 앱을 실행한 사람에게 알려 주세요.';
+  return `요청을 처리하지 못했습니다(코드 ${status}). 잠시 뒤 다시 시도해 주세요.`;
+}
+
+// JSON·FormData 공통 호출. 항상 {ok, data|error, status, aborted}를 돌려준다.
+async function api(url, method, body, opts = {}) {
+  const init = {method, signal: opts.signal};
+  if (body instanceof FormData) init.body = body;
+  else if (body) { init.headers = {'Content-Type': 'application/json'}; init.body = JSON.stringify(body); }
+  try {
+    const r = await fetch(url, init);
+    if (r.status === 204) return {ok: true, status: 204};
+    let data = null;
+    try { data = await r.json(); } catch { /* JSON이 아닌 응답(500 등)은 내용을 보여 주지 않는다 */ }
+    if (!r.ok) return {ok: false, status: r.status, error: friendly(r.status, data && data.detail, opts.ctx)};
+    if (data === null) return {ok: false, status: r.status, error: '서버 응답을 읽지 못했습니다. 잠시 뒤 다시 시도해 주세요.'};
+    return {ok: true, status: r.status, data};
+  } catch (e) {
+    if (e && e.name === 'AbortError') return {ok: false, aborted: true, error: '취소했습니다.'};
+    return {ok: false, error: '서버에 연결할 수 없습니다. 앱이 켜져 있는지 확인하고 다시 시도해 주세요.'};
+  }
+}
+
+// 오래 걸리는 작업: 진행 막대 + 경과 시간 + 취소 버튼
+function startBusy(p, expect) {
+  const ctl = new AbortController(), t0 = Date.now();
+  const tick = () => { $(p + 'Elapsed').textContent = `${Math.floor((Date.now() - t0) / 1000)}초 경과 · ${expect}`; };
+  tick(); const iv = setInterval(tick, 1000);
+  $(p + 'Prog').classList.remove('hidden');
+  $(p + 'Cancel').onclick = () => ctl.abort();
+  return {signal: ctl.signal, stop() { clearInterval(iv); $(p + 'Prog').classList.add('hidden'); }};
+}
+
+async function resize(file) {  // 긴 변 1280px 이하로 줄여 전송량 절감
+  const bmp = await createImageBitmap(file);
+  const s = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', 0.85));
+}
+
+async function pick(file) {
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return setMsg('JPEG, PNG, WebP 사진만 올릴 수 있습니다. 휴대폰 HEIC 사진이라면 JPEG로 바꿔서 올려 주세요.', true);
+  if (file.size > MAX_BYTES) return setMsg('사진이 10MB보다 큽니다. 더 작은 사진을 골라 주세요.', true);
+  let b; try { b = await resize(file); } catch { return setMsg('이 사진은 읽을 수 없습니다. 다른 사진을 골라 주세요.', true); }
+  blob = b;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = URL.createObjectURL(blob);
+  $('preview').src = previewUrl; $('preview').style.display = 'block';
+  $('go').disabled = false; setMsg('사진을 골랐습니다. "사진에서 재료 찾기"를 눌러 주세요.');
+}
+
+$('drop').onclick = () => $('file').click();
+$('drop').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
+$('file').onchange = async e => { await pick(e.target.files[0]); e.target.value = ''; };  // 같은 파일을 다시 골라도 반응하도록 초기화
+$('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'); };
+$('drop').ondragleave = () => $('drop').classList.remove('over');
+$('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); pick(e.dataTransfer.files[0]); };
+
+// ---- 재료 목록 ----
+function currentItems() {
+  return [...$('list').children].map(li => ({name: li.children[0].value.trim(), quantity: li.children[1].value.trim()})).filter(i => i.name);
+}
+function checkStale() {  // 확정한 목록과 지금 목록이 다르면 알려 준다
+  const saved = sessionStorage.getItem('ingredients');
+  $('stale').classList.toggle('hidden', !saved || $('step2').classList.contains('hidden') || saved === JSON.stringify(currentItems()));
+}
+$('list').addEventListener('input', checkStale);
+
+function addRow(item = {name: '', quantity: '', confidence: 'high'}) {
+  const li = document.createElement('li');
+  if (item.confidence === 'low') li.className = 'low';
+  const name = Object.assign(document.createElement('input'), {className: 'name', value: item.name, placeholder: '재료명 (예: 계란)', maxLength: 40});
+  const qty = Object.assign(document.createElement('input'), {className: 'qty', value: item.quantity, placeholder: '수량 (예: 3개)', maxLength: 40});
+  name.setAttribute('aria-label', '재료명'); qty.setAttribute('aria-label', '수량');
+  const del = Object.assign(document.createElement('button'), {textContent: '삭제', onclick: () => { li.remove(); checkStale(); }});
+  del.setAttribute('aria-label', '이 재료 삭제');
+  li.append(name, qty);
+  if (item.confidence === 'low') { const t = document.createElement('span'); t.className = 'tag'; t.textContent = '불확실'; li.append(t); }
+  li.append(del); $('list').append(li);
+}
+
+$('go').onclick = async () => {
+  $('go').disabled = true; setMsg('사진 속 재료를 찾고 있습니다. 무료 AI라 보통 10~30초, 더 걸릴 수도 있습니다.');
+  const busy = startBusy('go', '보통 10~30초');
+  const fd = new FormData(); fd.append('file', blob, 'photo.jpg');
+  const res = await api('/api/recognize', 'POST', fd, {signal: busy.signal, ctx: 'recognize'});
+  busy.stop(); $('go').disabled = false;
+  if (!res.ok) { setMsg(res.error, !res.aborted); if (!$('list').children.length) addRow(); return; }
+  const data = res.data;
+  $('list').replaceChildren(); data.ingredients.forEach(addRow); if (!data.ingredients.length) addRow();
+  $('model').textContent = '(인식한 AI: ' + data.model + ')';
+  $('lowHint').classList.toggle('hidden', !data.ingredients.some(i => i.confidence === 'low'));
+  $('listHint').textContent = data.ingredients.length ? '틀린 재료는 고치거나 삭제하고, 빠진 재료는 "+ 재료 추가"로 넣은 뒤 아래 버튼을 눌러 주세요.' : '';
+  setMsg(data.ingredients.length ? `재료 ${data.ingredients.length}개를 찾았습니다. 아래 2단계에서 확인해 주세요.` : '재료를 찾지 못했습니다. 다른 사진을 시도하거나 아래 목록에 직접 입력해 주세요.', !data.ingredients.length);
+  say('msgConfirm', ''); checkStale();
+  $('result').scrollIntoView({behavior: smooth(), block: 'start'});
+};
+
+$('add').onclick = () => { addRow(); $('list').lastElementChild.children[0].focus(); checkStale(); };
+$('confirm').onclick = () => {
+  const items = currentItems();
+  if (!items.length) return say('msgConfirm', '재료를 한 개 이상 입력해 주세요. 재료명 칸에 적으면 됩니다.', true);
+  sessionStorage.setItem('ingredients', JSON.stringify(items));  // 2단계 입력
+  say('msgConfirm', `재료 ${items.length}개를 확정했습니다. 아래 3단계에서 조건을 정해 주세요.`);
+  $('confirmed').textContent = items.map(i => i.name).join(', ');
+  $('step2').classList.remove('hidden'); checkStale();
+  $('step2').scrollIntoView({behavior: smooth()}); $('servings').focus({preventScroll: true});
+};
+
+const DIFF = {easy: '쉬움', medium: '보통', hard: '어려움'};
+function chips(arr, cls) { const f = document.createDocumentFragment(); arr.forEach(t => { const c = document.createElement('span'); c.className = 'chip ' + cls; c.textContent = t; f.append(c); }); return f; }
+function el(tag, text, cls) { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
+
+let lastIngredients = [];
+function recipeCard(r, extra) {  // 모델 출력은 항상 textContent로만 넣는다
+  const d = el('div', null, 'recipe');
+  d.append(el('h3', r.title), el('div', r.summary));
+  d.append(el('div', `${r.servings}인분 · ${r.time_minutes ? r.time_minutes + '분' : '시간 미정'} · ${DIFF[r.difficulty]}`, 'meta'));
+  const u = el('div'); u.append(el('small', '보유 재료: '), chips(r.uses, '')); d.append(u);
+  if (r.missing.length) { const m = el('div'); m.append(el('small', '추가로 필요: '), chips(r.missing, 'miss')); d.append(m); }
+  const ol = el('ol'); r.steps.forEach(s => ol.append(el('li', s))); d.append(ol);
+  if (extra) d.append(extra);
+  return d;
+}
+
+function renderRecipes(list) {
+  const box = $('recipes'); box.replaceChildren();
+  list.forEach(r => {
+    const row = el('div', null, 'row'); const msg = el('span', '', 'meta'); msg.setAttribute('role', 'status');
+    const btn = el('button', '이 레시피 저장하기'); btn.onclick = async () => {
+      btn.disabled = true;
+      const res = await api('/api/saved', 'POST', {recipe: r, ingredients: lastIngredients});
+      msg.className = res.ok ? 'meta' : 'err';
+      if (res.ok) { msg.textContent = '저장했습니다. 맨 아래 "저장한 레시피"에서 볼 수 있습니다.'; btn.textContent = '저장됨'; loadSaved(); }
+      else { msg.textContent = res.error; if (res.status === 409 && /이미 저장/.test(res.error)) btn.textContent = '저장됨'; else btn.disabled = false; }
+    };
+    row.append(btn, msg); box.append(recipeCard(r, row));
+  });
+  $('notice').classList.remove('hidden');
+}
+
+// ---- 프로필 ----
+let profile = {nickname: null, prefs: {exclude: [], servings: 2}};
+let step2Touched = false;  // 사용자가 3단계 값을 직접 건드렸으면 프로필 값으로 덮어쓰지 않는다
+['servings', 'exclude'].forEach(id => $(id).addEventListener('input', () => { step2Touched = true; }));
+function prefillStep2() { if (profile.nickname && !step2Touched) { $('servings').value = profile.prefs.servings; $('exclude').value = profile.prefs.exclude.join(', '); } }
+function showProfile() {
+  const has = !!profile.nickname;
+  $('profView').classList.toggle('hidden', !has); $('profForm').classList.toggle('hidden', has);
+  $('hello').textContent = has ? `${profile.nickname}님의 냉장고 (못 먹는 재료: ${profile.prefs.exclude.join(', ') || '없음'})` : '';
+}
+$('profEdit').onclick = () => {
+  $('nick').value = profile.nickname; $('pServ').value = profile.prefs.servings; $('pExcl').value = profile.prefs.exclude.join(', ');
+  $('profTitle').textContent = '프로필 수정'; $('profCancel').classList.remove('hidden');
+  $('profView').classList.add('hidden'); $('profForm').classList.remove('hidden'); $('nick').focus();
+};
+$('profCancel').onclick = () => { $('profMsg').textContent = ''; showProfile(); };
+$('profForm').onsubmit = async e => {
+  e.preventDefault();
+  const res = await api('/api/profile', 'PUT', {nickname: $('nick').value.trim(), prefs: {servings: +$('pServ').value || 2, exclude: $('pExcl').value.split(',').map(x => x.trim()).filter(Boolean)}});
+  if (!res.ok) return ($('profMsg').textContent = res.error);
+  profile = res.data; $('profMsg').textContent = ''; showProfile(); prefillStep2();
+};
+
+// ---- 저장 목록 ----
+let loadSeq = 0, searchTimer = null;
+async function loadSaved() {
+  const my = ++loadSeq;  // 늦게 도착한 이전 검색 결과가 최신 결과를 덮지 않게 한다
+  const q = $('search').value.trim();
+  const res = await api('/api/saved' + (q ? '?q=' + encodeURIComponent(q) : ''), 'GET');
+  if (my !== loadSeq) return;
+  const box = $('savedList'); box.replaceChildren();
+  if (!res.ok) return say('savedMsg', res.error, true);
+  say('savedMsg', res.data.recipes.length ? '' : (q ? `"${q}"에 맞는 저장한 레시피가 없습니다. 다른 검색어로 찾아 보세요.` : '아직 저장한 레시피가 없습니다. 레시피를 추천받은 뒤 "이 레시피 저장하기"를 누르면 여기에 모입니다.'));
+  res.data.recipes.forEach(item => {
+    const d = el('div', null, 'recipe'); d.append(el('h3', item.title));
+    d.append(el('div', item.created_at.slice(0, 10) + ' · 재료: ' + item.ingredients.map(i => i.name).join(', '), 'meta'));
+    const row = el('div', null, 'row'); const detail = el('div', null, 'hidden');
+    detail.append(recipeCard(item.recipe));
+    const view = el('button', '만드는 법 보기'); view.onclick = () => { detail.classList.toggle('hidden'); view.textContent = detail.classList.contains('hidden') ? '만드는 법 보기' : '접기'; };
+    const del = el('button', '삭제'); del.onclick = async () => {
+      if (!confirm(`'${item.title}' 레시피를 삭제할까요? 삭제하면 되돌릴 수 없습니다.`)) return;
+      const r = await api('/api/saved/' + item.id, 'DELETE'); if (r.ok) loadSaved(); else say('savedMsg', r.error, true);
+    };
+    row.append(view, del); d.append(row, detail); box.append(d);
+  });
+}
+$('search').oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadSaved, 250); };
+
+$('rec').onclick = async () => {
+  const ingredients = JSON.parse(sessionStorage.getItem('ingredients') || '[]');
+  if (!ingredients.length) return say('msg2', '먼저 2단계에서 재료를 확정해 주세요.', true);
+  if (JSON.stringify(currentItems()) !== JSON.stringify(ingredients)) {
+    $('stale').classList.remove('hidden');
+    return say('msg2', '재료 목록이 확정한 내용과 다릅니다. 2단계의 "이 재료로 레시피 조건 정하기"를 다시 누른 뒤 추천받아 주세요.', true);
+  }
+  const body = {ingredients, servings: +$('servings').value || 2,
+    max_minutes: $('maxmin').value ? +$('maxmin').value : null, difficulty: $('diff').value || null,
+    exclude: $('exclude').value.split(',').map(x => x.trim()).filter(Boolean)};
+  lastIngredients = ingredients;
+  $('rec').disabled = true; say('msg2', '레시피를 만들고 있습니다. AI가 생각하는 시간이 필요해 보통 30~60초 걸립니다. 이 화면을 닫지 말고 기다려 주세요.');
+  const busy = startBusy('rec', '보통 30~60초, 최대 3분');
+  const res = await api('/api/recipes', 'POST', body, {signal: busy.signal, ctx: 'recipes'});
+  busy.stop(); $('rec').disabled = false;
+  if (!res.ok) return say('msg2', res.error, !res.aborted);
+  renderRecipes(res.data.recipes);
+  say('msg2', `레시피 ${res.data.recipes.length}개를 만들었습니다. 마음에 드는 것은 "이 레시피 저장하기"를 눌러 두세요. (AI: ${res.data.model})`);
+  $('recipes').scrollIntoView({behavior: smooth(), block: 'start'});
+};
+addRow();
+(async () => {
+  const r = await api('/api/profile', 'GET');
+  if (r.ok) profile = r.data; else $('profMsg').textContent = r.error;
+  showProfile(); prefillStep2(); loadSaved();
+})();
+</script>
+</body>
+</html>
