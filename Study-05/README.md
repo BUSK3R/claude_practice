@@ -3,6 +3,18 @@
 일기를 쓰면 AI(OpenRouter 무료 모델)가 감정을 분석하고 공감·위로 메시지를 돌려주는 로컬 웹 앱입니다.
 일기 기록은 서버가 아니라 브라우저(localStorage)에만 저장됩니다.
 
+## 실행 화면
+
+실제 서버 코드와 화면으로 찍었습니다. 다만 무료 호출 한도(하루 50회)를 아끼려고, 모델 호출 부분만 앞서 실제 OpenRouter 무료 모델을 호출해 받은 응답을 그대로 재생하도록 바꿨습니다. 일기 내용은 예시로 직접 쓴 글입니다.
+
+| 시작 | 일반 일기 결과 |
+| :---: | :---: |
+| <img src="screenshots/01-start.png" alt="시작 화면" width="360"> | <img src="screenshots/02-result.png" alt="일반 일기 분석 결과 화면" width="360"> |
+
+| 위기 표현이 있는 일기 | 지난 일기 목록 |
+| :---: | :---: |
+| <img src="screenshots/03-crisis.png" alt="위기 안내 박스가 뜬 결과 화면" width="360"> | <img src="screenshots/04-history.png" alt="지난 일기 목록 화면" width="360"> |
+
 ## 준비
 - Python 3.11 이상 (`asyncio.timeout` 사용)
 - [OpenRouter](https://openrouter.ai) API 키
