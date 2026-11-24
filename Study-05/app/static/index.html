@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>마음 일기 - AI 공감 다이어리</title>
+<style>
+:root {
+  --bg: #f6ecdc;
+  --bg2: #efe1c9;
+  --paper: #fffaf0;
+  --paper-edge: #e6d6bb;
+  --line: #efe3cc;
+  --ink: #3b2f24;
+  --muted: #655545;
+  --accent: #8a4f2e;
+  --accent-hover: #743f22;
+  --on-accent: #ffffff;
+  --sage: #e5ebd6;
+  --sage-ink: #3f4d2c;
+  --peach: #fde5d2;
+  --peach-edge: #e9a97c;
+  --calm-bg: #f3ecd9;
+  --calm-edge: #8a6d3b;
+  --track: #eadfca;
+  --danger-ink: #7a2f22;
+  --danger-bg: #fbe9e2;
+  --focus: #1f5fbf;
+  --shadow: 0 6px 18px rgba(92, 64, 36, .14), 0 1px 3px rgba(92, 64, 36, .12);
+  --serif: "Iowan Old Style", "Palatino Linotype", "Batang", "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --e-joy: #a8660d; --e-sad: #3f69a6; --e-anger: #b0392b; --e-anxiety: #7d57a6;
+  --e-lonely: #3f7686; --e-tired: #62695a; --e-flutter: #b8456f; --e-calm: #4d7d47;
+  --e-regret: #86553a; --e-grateful: #a5651c; --e-other: #6f6152;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #241c15;
+    --bg2: #2c231b;
+    --paper: #342a20;
+    --paper-edge: #4d3f2f;
+    --line: #3d3226;
+    --ink: #f3e7d4;
+    --muted: #cdbca4;
+    --accent: #f0b98a;
+    --accent-hover: #f7cba5;
+    --on-accent: #2a1d12;
+    --sage: #3a4230;
+    --sage-ink: #dfe8c9;
+    --peach: #4a3426;
+    --peach-edge: #c98b5e;
+    --calm-bg: #3d3425;
+    --calm-edge: #c7a45f;
+    --track: #4a3d2e;
+    --danger-ink: #f5c9bb;
+    --danger-bg: #4a2e27;
+    --focus: #8fbaff;
+    --shadow: 0 6px 18px rgba(0, 0, 0, .4);
+    --e-joy: #e8b04a; --e-sad: #8fb2e8; --e-anger: #ee8c7d; --e-anxiety: #c6a6ea;
+    --e-lonely: #7fc0d1; --e-tired: #b3bba8; --e-flutter: #f09abb; --e-calm: #9bcf93;
+    --e-regret: #d6a083; --e-grateful: #efb36a; --e-other: #c3b4a0;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.7;
+  background: radial-gradient(circle at 20% 0%, var(--bg2), transparent 55%), var(--bg);
+  min-height: 100vh; overflow-wrap: anywhere;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 700; line-height: 1.35; margin: 0; }
+header { text-align: center; padding: 16px 0 8px; }
+header h1 { font-size: 2rem; letter-spacing: .02em; }
+.date { margin: 4px 0 0; color: var(--muted); font-size: .95rem; }
+.lead { margin: 8px 0 0; color: var(--muted); font-size: .98rem; }
+.paper {
+  background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 18px;
+  box-shadow: var(--shadow); padding: 20px 18px; margin-top: 20px;
+}
+.paper h2 { font-size: 1.25rem; margin-bottom: 10px; }
+label.big { display: block; font-family: var(--serif); font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+textarea {
+  width: 100%; min-height: 220px; resize: vertical; display: block;
+  font: inherit; font-size: 17px; line-height: 32px; color: var(--ink);
+  background-color: var(--paper);
+  background-image: linear-gradient(to bottom, transparent 31px, var(--line) 31px);
+  background-size: 100% 32px; background-attachment: local;
+  border: 2px solid var(--paper-edge); border-radius: 12px; padding: 4px 14px 8px;
+}
+textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
+textarea[readonly] { opacity: .8; }
+textarea::placeholder { color: var(--muted); opacity: .85; }
+.meta { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin: 8px 2px 0; font-size: .92rem; color: var(--muted); }
+.meta .hint { margin: 0; flex: 1; }
+.counter { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.counter.over { color: var(--danger-ink); font-weight: 700; }
+button { font: inherit; cursor: pointer; min-height: 48px; border-radius: 999px; padding: 8px 22px; }
+.primary {
+  display: block; width: 100%; margin-top: 14px; border: 0; font-weight: 700; font-size: 1.05rem;
+  background: var(--accent); color: var(--on-accent);
+}
+.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.primary:disabled { cursor: not-allowed; background: var(--track); color: var(--muted); }
+.ghost { background: transparent; color: var(--ink); border: 2px solid var(--paper-edge); }
+.ghost:hover { background: var(--bg2); }
+.danger-btn { background: var(--danger-bg); color: var(--danger-ink); border: 2px solid var(--danger-ink); }
+.small { min-height: 44px; font-size: .95rem; padding: 6px 16px; }
+.loading {
+  display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center;
+  margin-top: 16px; padding: 16px; border-radius: 14px; background: var(--sage); color: var(--sage-ink);
+}
+.loading[hidden], [hidden] { display: none !important; }
+.loading p { margin: 0; }
+.dots { display: inline-block; width: 28px; height: 28px; border-radius: 50%; border: 4px solid var(--sage-ink); border-right-color: transparent; animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.notice { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .98rem; }
+.error { background: var(--danger-bg); color: var(--danger-ink); border: 1px solid var(--danger-ink); }
+.info { background: var(--sage); color: var(--sage-ink); }
+.notice p { margin: 0; }
+.error p:first-child::before { content: "알려드려요 · "; font-weight: 700; }
+.error .keep-note { margin-top: 6px; font-size: .92rem; }
+.error .help-line { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--danger-ink); font-size: .92rem; word-break: keep-all; }
+.help-line a, .crisis .tel-text a { color: inherit; font-weight: 700; text-decoration: underline; display: inline-block; padding: 10px 4px; min-height: 44px; }
+.error.compact { padding: 8px 12px; font-size: .92rem; }
+.error.compact p:first-child::before { content: none; }
+.error.compact .keep-note { display: none; }
+.notice:focus { outline: none; }
+.notice:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* crisis */
+.crisis {
+  margin-top: 20px; padding: 18px; border-radius: 18px; background: var(--peach);
+  border: 2px solid var(--peach-edge); box-shadow: var(--shadow);
+}
+.crisis h3 { font-size: 1.15rem; margin-bottom: 6px; }
+.crisis p { margin: 6px 0; }
+.crisis .call {
+  display: flex; align-items: center; justify-content: center; min-height: 52px; margin-top: 10px; padding: 8px 18px;
+  border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; font-size: 1.1rem;
+}
+.crisis .call:hover { background: var(--accent-hover); }
+/* result */
+.result:focus { outline: none; }
+.result > .paper { margin-top: 20px; }
+.result-head { display: flex; align-items: center; gap: 12px; }
+.result-head .emoji { font-size: 2.6rem; line-height: 1; }
+.result-head .sub { margin: 0; color: var(--muted); font-size: .9rem; }
+.result-head h2 { margin: 0; font-size: 1.4rem; }
+.primary-card { border-left: 8px solid var(--emo, var(--e-other)); }
+.bars { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 5.5em 1fr auto; gap: 10px; align-items: center; font-size: .95rem; }
+.bars .nm { font-weight: 700; }
+.bars .track { height: 14px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.bars .fill { display: block; height: 100%; border-radius: 999px; background: var(--emo, var(--e-other)); }
+.bars .val { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.8em; text-align: right; }
+.section-label { font-size: .9rem; color: var(--muted); margin: 0 0 4px; font-weight: 700; }
+.summary { font-family: var(--serif); font-size: 1.2rem; margin: 0; white-space: pre-line; }
+.letter {
+  background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 6px 18px 18px 18px;
+  box-shadow: var(--shadow); padding: 20px 18px; margin-top: 20px;
+  border-top: 4px solid var(--peach-edge);
+}
+.letter h3 { font-size: 1.1rem; margin-bottom: 8px; }
+.letter p { margin: 0; white-space: pre-line; line-height: 1.85; }
+.letter.comfort { background-color: var(--sage); color: var(--sage-ink); border-color: transparent; border-top: 4px solid var(--sage-ink); }
+.diary-orig { white-space: pre-line; margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--calm-bg); border-left: 5px solid var(--calm-edge); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.actions button { flex: 1 1 140px; }
+.confirm { margin-top: 18px; padding: 14px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-ink); border: 1px solid var(--danger-ink); }
+.confirm p { margin: 0 0 8px; font-weight: 700; }
+.confirm .actions { margin-top: 8px; }
+/* history */
+.hist-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hist-head h2 { margin: 0; }
+.keep { margin: 6px 0 12px; font-size: .92rem; color: var(--muted); }
+.entries { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.entry-btn {
+  display: block; width: 100%; text-align: left; border-radius: 14px; min-height: 64px; padding: 10px 14px;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--paper-edge); border-left: 8px solid var(--emo, var(--e-other));
+}
+.entry-btn:hover { background: var(--bg2); }
+.entry-btn[aria-current="true"] { border-color: var(--accent); border-left-color: var(--emo, var(--e-other)); }
+.entry-top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: .9rem; color: var(--muted); }
+.entry-top strong { color: var(--ink); }
+.entry-prev { margin: 2px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.empty { text-align: center; padding: 18px 8px; color: var(--muted); }
+.empty .emoji { font-size: 2rem; display: block; }
+footer { margin-top: 28px; font-size: .9rem; color: var(--muted); text-align: center; }
+footer p { margin: 6px 0; }
+footer .help109 { color: var(--ink); font-weight: 700; word-break: keep-all; }
+body.has-crisis footer .help109 { font-weight: 400; color: var(--muted); }
+footer .help109 a { color: var(--accent); display: inline-block; padding: 8px 4px; min-height: 44px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (min-width: 640px) {
+  .wrap { padding: 36px 24px 56px; }
+  header h1 { font-size: 2.5rem; }
+  .paper { padding: 28px 30px; }
+  .primary { width: auto; min-width: 240px; margin-left: auto; }
+  .bars li { grid-template-columns: 7em 1fr auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dots { animation: none; border-right-color: var(--sage-ink); }
+  * { scroll-behavior: auto !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>마음 일기</h1>
+    <p class="date" id="today"></p>
+    <p class="lead">오늘 있었던 일을 편하게 적어 보세요. 제가 마음을 함께 들여다볼게요.</p>
+  </header>
+
+  <main>
+    <section class="paper" aria-labelledby="write-title">
+      <h2 class="sr" id="write-title">일기 쓰기</h2>
+      <form id="form" novalidate>
+        <label class="big" for="text">오늘은 어떤 하루였나요?</label>
+        <textarea id="text" name="text" aria-describedby="hint count"
+          placeholder="예: 오늘 회의에서 발표를 했는데 너무 떨렸어요. 끝나고 동료가 잘했다고 해 줘서 마음이 조금 놓였어요."></textarea>
+        <div class="meta">
+          <p class="hint" id="hint"></p>
+          <span class="counter" id="count" aria-live="off">0 / 2000</span>
+        </div>
+        <button type="submit" class="primary" id="submit" disabled>마음 들려주기</button>
+      </form>
+      <div class="loading" id="loading" hidden role="status">
+        <span class="dots" aria-hidden="true"></span>
+        <p><strong id="loading-msg">일기를 천천히 읽고 있어요.</strong></p>
+        <p>보통 30초~1분쯤 걸려요. <span id="elapsed" aria-hidden="true">0초</span></p>
+        <button type="button" class="ghost small" id="cancel">그만두기</button>
+      </div>
+      <div id="msg-error" class="notice error" role="alert" tabindex="-1" hidden><p id="msg-error-text"></p><p class="keep-note" id="msg-error-keep">쓴 글은 그대로 있어요.</p><p class="help-line" id="msg-error-help" hidden></p></div>
+      <div id="err-crisis"></div>
+      <div id="msg-info" class="notice info" role="status" hidden><p id="msg-info-text"></p></div>
+    </section>
+
+    <div id="result" class="result" tabindex="-1" aria-live="polite"></div>
+
+    <section class="paper" aria-labelledby="hist-title">
+      <div class="hist-head">
+        <h2 id="hist-title" tabindex="-1">지난 일기</h2>
+        <button type="button" class="ghost small" id="clear-all" hidden>전체 지우기</button>
+      </div>
+      <p class="keep">일기와 쓰다 만 글은 이 브라우저에 그대로(암호화 없이) 저장돼요. 쓰는 중에도 자동으로 저장되고, 같은 컴퓨터를 쓰는 다른 사람이 볼 수 있어요. 내 기기가 아니라면 쓴 뒤에 일기를 지워 주세요. 브라우저 데이터를 지우면 함께 사라져요.</p>
+      <div id="confirm-all" class="confirm" hidden>
+        <p>지난 일기와 입력창에 쓰던 글을 모두 지울까요? 지우면 되돌릴 수 없어요.</p>
+        <div class="actions">
+          <button type="button" class="ghost small" id="confirm-all-no">그만두기</button>
+          <button type="button" class="danger-btn small" id="confirm-all-yes">모두 지우기</button>
+        </div>
+      </div>
+      <div id="hist-note" class="notice info" role="status" hidden><p id="hist-note-text"></p></div>
+      <ul class="entries" id="entries"></ul>
+      <div class="empty" id="empty" hidden>
+        <span class="emoji" aria-hidden="true">📖</span>
+        <p>아직 쓴 일기가 없어요.<br>위에 오늘 하루를 한두 줄만 적고 &lsquo;마음 들려주기&rsquo;를 눌러 보세요.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="help109">마음이 많이 힘들다면 혼자 견디지 마세요. 자살예방 상담전화 <a href="tel:109" aria-label="자살예방 상담전화 109 전화 걸기">109</a> (24시간)</p>
+    <p>AI는 전문 상담사가 아니에요. 힘든 마음이 계속되면 주변 사람이나 전문가와 꼭 이야기해 보세요.</p>
+    <p>쓴 일기는 분석을 위해 외부 AI 서비스로 전송돼요. 이름이나 연락처 같은 개인 정보는 빼고 적는 걸 권해요.</p>
+  </footer>
+</div>
+<div class="sr" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var MAX_TEXT = 2000, MAX_ENTRIES = 200, KEY = 'empathy-diary-v1', DRAFT_KEY = 'empathy-diary-draft-v1', TIMEOUT_MS = 165000;
+  var $ = function (id) { return document.getElementById(id); };
+  var ta = $('text'), btn = $('submit'), hint = $('hint'), count = $('count');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 감정 매핑 ---------- */
+  var EMO = {
+    '기쁨': ['😊', 'joy'], '슬픔': ['😢', 'sad'], '분노': ['😠', 'anger'], '불안': ['😟', 'anxiety'],
+    '외로움': ['🥺', 'lonely'], '지침': ['😮‍💨', 'tired'], '설렘': ['🥰', 'flutter'], '평온': ['😌', 'calm'],
+    '후회': ['😔', 'regret'], '감사': ['🙏', 'grateful'], '기타': ['💭', 'other']
+  };
+  function emo(name) { return Object.prototype.hasOwnProperty.call(EMO, name) ? EMO[name] : ['💭', 'other']; }
+  function emoColor(name) { return 'var(--e-' + emo(name)[1] + ')'; }
+
+  /* ---------- DOM 도우미 (textContent만 사용) ---------- */
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+  function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+  function show(n, on) { n.hidden = !on; }
+  function toast(t) { var n = $('toast'); n.textContent = ''; setTimeout(function () { n.textContent = t; }, 50); }
+  function len(s) { return Array.from(s).length; }
+
+  /* ---------- 날짜 ---------- */
+  function fmtDate(ms) {
+    try { return new Date(ms).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); }
+    catch (e) { return ''; }
+  }
+  function fmtShort(ms) {
+    try { return new Date(ms).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }) + ' ' +
+      new Date(ms).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }); }
+    catch (e) { return ''; }
+  }
+  $('today').textContent = fmtDate(Date.now());
+
+  /* ---------- 데이터 검증 (서버 응답, 저장값 공통) ---------- */
+  function str(v, max) { return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null; }
+  function sanitizeResult(r) {
+    if (!r || typeof r !== 'object' || !Array.isArray(r.emotions)) return null;
+    var primary = str(r.primary_emotion, 12), summary = str(r.summary, 400),
+        empathy = str(r.empathy, 1500), comfort = str(r.comfort, 1500);
+    if (!primary || !summary || !empathy || !comfort) return null;
+    var list = [];
+    r.emotions.slice(0, 6).forEach(function (e) {
+      if (!e || typeof e !== 'object') return;
+      var name = str(e.name, 12), n = Number(e.intensity);
+      if (!name || !isFinite(n)) return;
+      list.push({ name: name, intensity: Math.min(5, Math.max(1, Math.round(n))) });
+    });
+    if (!list.length) return null;
+    return { primary_emotion: primary, emotions: list, summary: summary, empathy: empathy, comfort: comfort, crisis: r.crisis === true };
+  }
+  function sanitizeEntry(e) {
+    if (!e || typeof e !== 'object') return null;
+    var id = typeof e.id === 'string' && e.id ? e.id.slice(0, 40) : null;
+    var date = Number(e.date), text = typeof e.text === 'string' ? e.text : null;
+    var result = sanitizeResult(e.result);
+    if (!id || !isFinite(date) || !text || !result) return null;
+    return { id: id, date: date, text: Array.from(text).slice(0, MAX_TEXT).join(''), result: result };
+  }
+
+  /* ---------- 저장소 (모든 접근 try/catch) ---------- */
+  var storageProblem = '';
+  function loadEntries() {
+    storageProblem = '';
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) { storageProblem = 'broken'; return []; }
+      var out = arr.map(sanitizeEntry).filter(Boolean);
+      if (out.length !== arr.length) storageProblem = 'partial';
+      out.sort(function (a, b) { return b.date - a.date; });
+      return out.slice(0, MAX_ENTRIES);
+    } catch (e) {
+      var blocked = false;
+      try { window.localStorage.getItem('x'); } catch (e2) { blocked = true; }
+      storageProblem = blocked ? 'blocked' : 'broken';
+      return [];
+    }
+  }
+  function saveEntries(list) {
+    try { window.localStorage.setItem(KEY, JSON.stringify(list)); return true; }
+    catch (e) { return false; }
+  }
+  var entries = loadEntries();
+  var canSave = storageProblem !== 'blocked';
+  /* 저장 직전에 최신 저장값을 다시 읽어 그 위에 변경을 적용한다(여러 탭 동시 사용 대비).
+     메모리 목록을 합집합으로 섞지 않으므로, 다른 탭에서 지운 항목이 되살아나지 않는다. */
+  function commit(mutator) {
+    var base = canSave ? loadEntries() : entries;
+    var next = mutator(base.slice());
+    next.sort(function (a, b) { return b.date - a.date; });
+    next = next.slice(0, MAX_ENTRIES);
+    entries = next;
+    return canSave && saveEntries(next);
+  }
+
+  /* ---------- 임시 저장(쓰다 만 글) ---------- */
+  var draftTimer = null;
+  function writeDraft() {
+    draftTimer = null;
+    try {
+      var v = Array.from(ta.value).slice(0, MAX_TEXT + 200).join('');
+      if (v.trim()) window.localStorage.setItem(DRAFT_KEY, v); else window.localStorage.removeItem(DRAFT_KEY);
+    } catch (e) { /* 저장 못 해도 쓰는 데는 지장 없음 */ }
+  }
+  function dropDraft() {
+    if (draftTimer) { clearTimeout(draftTimer); draftTimer = null; }
+    try { window.localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  }
+  function scheduleDraft() { if (draftTimer) clearTimeout(draftTimer); draftTimer = setTimeout(writeDraft, 500); }
+  window.addEventListener('pagehide', function () { if (draftTimer) writeDraft(); });
+  function restoreDraft() {
+    try {
+      var d = window.localStorage.getItem(DRAFT_KEY);
+      if (typeof d === 'string' && d.trim() && !ta.value) { ta.value = Array.from(d).slice(0, MAX_TEXT + 200).join(''); return true; }
+    } catch (e) {}
+    return false;
+  }
+
+  /* ---------- 입력 상태 ---------- */
+  var busy = false;
+  function updateInput() {
+    var n = len(ta.value.trim());
+    count.textContent = n + ' / ' + MAX_TEXT;
+    count.classList.toggle('over', n > MAX_TEXT);
+    var msg = '';
+    if (n === 0) msg = '오늘 있었던 일을 한 줄만 적어도 괜찮아요.';
+    else if (n > MAX_TEXT) msg = '조금만 줄여 주세요. ' + (n - MAX_TEXT) + '자 넘었어요.';
+    hint.textContent = msg;
+    btn.disabled = busy || n === 0 || n > MAX_TEXT;
+  }
+  ta.addEventListener('input', function () { updateInput(); scheduleDraft(); });
+
+  /* ---------- 메시지 ---------- */
+  function clearMessages() { show($('msg-error'), false); show($('msg-info'), false); clear($('err-crisis')); syncCrisis(); }
+  /* 위기 박스가 화면에 있으면 푸터 109 안내를 한 단계 낮춰 중복 느낌을 줄인다 */
+  function syncCrisis() { document.body.classList.toggle('has-crisis', !!document.querySelector('.crisis')); }
+  function helpLine(p) {
+    clear(p);
+    p.appendChild(document.createTextNode('지금 마음이 많이 힘들다면 자살예방 상담전화 '));
+    var a = el('a', null, '109'); a.href = 'tel:109'; a.setAttribute('aria-label', '자살예방 상담전화 109 전화 걸기');
+    p.appendChild(a);
+    p.appendChild(document.createTextNode('(24시간)로 바로 연락할 수 있어요.'));
+  }
+  /* crisis===true: 위기 박스만 / net===true: 응답을 못 받은 경우의 보조 한 줄 (둘은 동시에 뜨지 않는다) */
+  function showError(t, crisis, net) {
+    var box = $('msg-error'), help = $('msg-error-help');
+    $('msg-error-text').textContent = t;
+    clear($('err-crisis'));
+    box.classList.toggle('compact', crisis === true);
+    if (crisis === true) { $('err-crisis').appendChild(crisisBox('err-crisis-title')); show(help, false); }
+    else if (net === true) { helpLine(help); show(help, true); }
+    else show(help, false);
+    show(box, true);
+    syncCrisis();
+    box.focus();
+  }
+  function showInfo(t) { $('msg-info-text').textContent = t; show($('msg-info'), true); }
+
+  /* ---------- 결과 렌더링 ---------- */
+  var resultBox = $('result');
+  function crisisBox(tid) {
+    tid = tid || 'crisis-title';
+    var b = el('aside', 'crisis');
+    b.setAttribute('aria-labelledby', tid);
+    var h = el('h3', null, '혼자 견디지 않아도 괜찮아요'); h.id = tid;
+    b.appendChild(h);
+    b.appendChild(el('p', null, '지금 마음이 많이 힘들다면, 이야기를 들어 줄 사람이 있어요. 아래 번호로 24시간, 무료로 언제든 이야기할 수 있어요.'));
+    var a = el('a', 'call', '109 자살예방 상담전화 걸기 (24시간)');
+    a.href = 'tel:109'; a.setAttribute('aria-label', '자살예방 상담전화 109 전화 걸기');
+    b.appendChild(a);
+    b.appendChild(el('p', null, '지금 당장 위험하다고 느껴지면 112(경찰)나 119(응급)에 바로 연락해 주세요.'));
+    return b;
+  }
+  function letter(title, body, cls) {
+    var s = el('section', 'letter' + (cls ? ' ' + cls : ''));
+    s.appendChild(el('h3', null, title));
+    s.appendChild(el('p', null, body));
+    return s;
+  }
+  function renderResult(entry, mode) {
+    clear(resultBox);
+    var r = entry.result;
+    if (r.crisis) resultBox.appendChild(crisisBox());
+    syncCrisis();
+
+    var card = el('section', 'paper primary-card');
+    card.style.setProperty('--emo', emoColor(r.primary_emotion));
+    card.setAttribute('aria-labelledby', 'result-title');
+    {
+      card.appendChild(el('p', 'section-label', mode === 'past' ? fmtDate(entry.date) + '에 쓴 일기' : '방금 쓴 일기'));
+      card.appendChild(el('p', 'diary-orig', entry.text));
+    }
+    var head = el('div', 'result-head');
+    var ico = el('span', 'emoji', emo(r.primary_emotion)[0]); ico.setAttribute('aria-hidden', 'true');
+    head.appendChild(ico);
+    var hb = el('div');
+    hb.appendChild(el('p', 'sub', '오늘 마음에 가장 크게 남은 감정'));
+    var h2 = el('h2', null, r.primary_emotion); h2.id = 'result-title';
+    hb.appendChild(h2);
+    head.appendChild(hb);
+    head.style.marginTop = '16px';
+    card.appendChild(head);
+
+    var ul = el('ul', 'bars');
+    ul.setAttribute('aria-label', '감정별 강도');
+    r.emotions.forEach(function (e) {
+      var li = el('li');
+      li.style.setProperty('--emo', emoColor(e.name));
+      li.appendChild(el('span', 'nm', emo(e.name)[0] + ' ' + e.name));
+      var track = el('span', 'track'); track.setAttribute('aria-hidden', 'true');
+      var fill = el('span', 'fill'); fill.style.width = (e.intensity * 20) + '%';
+      track.appendChild(fill);
+      li.appendChild(track);
+      li.appendChild(el('span', 'val', '5점 중 ' + e.intensity));
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+
+    var sum = el('div'); sum.style.marginTop = '18px';
+    sum.appendChild(el('p', 'section-label', '한 줄 요약'));
+    sum.appendChild(el('p', 'summary', r.summary));
+    card.appendChild(sum);
+    resultBox.appendChild(card);
+
+    resultBox.appendChild(letter('마음을 읽어 봤어요', r.empathy));
+    resultBox.appendChild(letter('전하고 싶은 위로', r.comfort, 'comfort'));
+
+    var actions = el('div', 'actions');
+    if (mode === 'past') {
+      var del = el('button', 'danger-btn small', '이 일기 지우기'); del.type = 'button';
+      var close = el('button', 'ghost small', '닫기'); close.type = 'button';
+      close.addEventListener('click', function () { closeResult(true); });
+      var conf = el('div', 'confirm'); conf.hidden = true;
+      conf.appendChild(el('p', null, '이 일기를 지울까요? 지우면 되돌릴 수 없어요.'));
+      var ca = el('div', 'actions');
+      var no = el('button', 'ghost small', '그만두기'); no.type = 'button';
+      var yes = el('button', 'danger-btn small', '지우기'); yes.type = 'button';
+      ca.appendChild(no); ca.appendChild(yes); conf.appendChild(ca);
+      del.addEventListener('click', function () { conf.hidden = false; actions.hidden = true; no.focus(); });
+      no.addEventListener('click', function () { conf.hidden = true; actions.hidden = false; del.focus(); });
+      yes.addEventListener('click', function () { deleteEntry(entry.id); });
+      actions.appendChild(close); actions.appendChild(del);
+      resultBox.appendChild(actions);
+      resultBox.appendChild(conf);
+    } else {
+      var fresh = el('button', 'ghost small', '새 일기 쓰기'); fresh.type = 'button';
+      function startNew() {
+        clear(resultBox); ta.value = ''; dropDraft(); updateInput(); clearMessages(); renderList(); ta.focus();
+        window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      }
+      actions.appendChild(fresh);
+      resultBox.appendChild(actions);
+      if (entry.unsaved) {
+        var nconf = el('div', 'confirm'); nconf.hidden = true;
+        nconf.appendChild(el('p', null, '이 일기는 저장되지 않았어요. 그래도 새 일기를 쓸까요?'));
+        var na = el('div', 'actions');
+        var nno = el('button', 'ghost small', '그만두기'); nno.type = 'button';
+        var nyes = el('button', 'danger-btn small', '새 일기 쓰기'); nyes.type = 'button';
+        na.appendChild(nno); na.appendChild(nyes); nconf.appendChild(na);
+        fresh.addEventListener('click', function () { nconf.hidden = false; actions.hidden = true; nno.focus(); });
+        nno.addEventListener('click', function () { nconf.hidden = true; actions.hidden = false; fresh.focus(); });
+        nyes.addEventListener('click', startNew);
+        resultBox.appendChild(nconf);
+      } else fresh.addEventListener('click', startNew);
+      if (!canSave || entry.unsaved) {
+        var warn = el('div', 'notice info'); warn.appendChild(el('p', null, '이 브라우저에서는 일기를 저장하지 못했어요. 이 화면을 닫으면 결과를 다시 볼 수 없어요.'));
+        resultBox.appendChild(warn);
+      }
+    }
+    focusResult();
+  }
+  function focusResult() {
+    resultBox.focus({ preventScroll: true });
+    resultBox.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  }
+  function closeResult(focusItem) {
+    var id = currentPast;
+    clear(resultBox); currentPast = null; renderList(); syncCrisis();
+    if (focusItem && id) {
+      var b = document.querySelector('[data-id="' + CSS.escape(id) + '"]');
+      if (b) { b.focus(); return; }
+    }
+    if (focusItem) $('hist-title').focus();
+  }
+
+  /* ---------- 기록 목록 ---------- */
+  var currentPast = null;
+  function renderList() {
+    var ul = $('entries'); clear(ul);
+    show($('empty'), entries.length === 0);
+    show($('clear-all'), entries.length > 0);
+    if (!entries.length) show($('confirm-all'), false);
+    var note = '';
+    if (storageProblem === 'blocked') note = '이 브라우저에서는 일기를 저장할 수 없어요. 지금 쓴 일기는 이 화면에서만 볼 수 있어요.';
+    else if (storageProblem === 'broken') note = '저장된 일기를 읽지 못해서 새로 시작했어요.';
+    else if (storageProblem === 'partial') note = '저장된 일기 중 일부를 읽지 못해 제외했어요.';
+    if (note) { $('hist-note-text').textContent = note; show($('hist-note'), true); } else show($('hist-note'), false);
+    entries.forEach(function (e) {
+      var li = el('li');
+      var b = el('button', 'entry-btn'); b.type = 'button';
+      b.dataset.id = e.id;
+      b.style.setProperty('--emo', emoColor(e.result.primary_emotion));
+      if (e.id === currentPast) b.setAttribute('aria-current', 'true');
+      var top = el('div', 'entry-top');
+      top.appendChild(el('span', null, fmtShort(e.date)));
+      top.appendChild(el('strong', null, emo(e.result.primary_emotion)[0] + ' ' + e.result.primary_emotion));
+      b.appendChild(top);
+      var flat = e.text.replace(/\s+/g, ' ').trim();
+      b.appendChild(el('p', 'entry-prev', flat.length > 90 ? flat.slice(0, 90) + '…' : flat));
+      b.setAttribute('aria-label', fmtShort(e.date) + ', ' + e.result.primary_emotion + ', 전체 보기');
+      b.addEventListener('click', function () { currentPast = e.id; renderResult(e, 'past'); renderList(); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  function deleteEntry(id) {
+    commit(function (l) { return l.filter(function (e) { return e.id !== id; }); });
+    clear(resultBox); currentPast = null; renderList(); syncCrisis();
+    toast('일기를 지웠어요.');
+    $('hist-title').focus();
+    $('hist-title').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  }
+  $('clear-all').addEventListener('click', function () { show($('confirm-all'), true); $('confirm-all-no').focus(); });
+  $('confirm-all-no').addEventListener('click', function () { show($('confirm-all'), false); $('clear-all').focus(); });
+  $('confirm-all-yes').addEventListener('click', function () {
+    commit(function () { return []; });
+    dropDraft(); ta.value = ''; updateInput();
+    show($('confirm-all'), false); clear(resultBox); currentPast = null; renderList(); syncCrisis();
+    toast('지난 일기를 모두 지웠어요.');
+    $('hist-title').focus();
+  });
+
+  /* ---------- 제출 ---------- */
+  var ctrl = null, timedOut = false, userCancelled = false, tick = null, started = 0;
+  function setBusy(on) {
+    busy = on;
+    ta.readOnly = on;
+    show($('loading'), on);
+    if (on) $('cancel').focus({ preventScroll: true });
+    btn.textContent = on ? '듣고 있어요…' : '마음 들려주기';
+    if (on) {
+      started = Date.now(); $('elapsed').textContent = '0초';
+      $('loading-msg').textContent = '일기를 천천히 읽고 있어요.';
+      tick = setInterval(function () {
+        var s = Math.floor((Date.now() - started) / 1000);
+        $('elapsed').textContent = (s >= 60 ? Math.floor(s / 60) + '분 ' + (s % 60) + '초' : s + '초') + ' 지났어요';
+        if (s === 60) $('loading-msg').textContent = '조금 더 걸리고 있어요. 조금만 더 기다려 주세요.';
+      }, 1000);
+    } else if (tick) { clearInterval(tick); tick = null; }
+    updateInput();
+  }
+  function fallbackMessage(status) {
+    if (status === 429) return '지금 AI가 많이 바빠요. 잠시 후 다시 눌러 주세요.';
+    if (status === 413) return '보내는 내용이 너무 커요. 일기를 조금 줄여 주세요.';
+    if (status === 422) return '일기를 1자 이상 2000자 이하로 써 주세요.';
+    if (status === 504) return '답변이 너무 오래 걸려요. 잠시 후 다시 시도해 주세요.';
+    return '지금은 마음을 들려드리기 어려워요. 잠시 후 다시 시도해 주세요.';
+  }
+  var NET_MSG = '서버에 연결하지 못했어요. 서버가 켜져 있는지 확인해 주세요.';
+
+  function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  $('form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (busy) return;
+    var text = ta.value.trim(), n = len(text);
+    if (n === 0 || n > MAX_TEXT) { updateInput(); return; }
+    clearMessages(); clear(resultBox); currentPast = null; renderList(); syncCrisis();
+    ctrl = new AbortController(); timedOut = false; userCancelled = false;
+    var timer = setTimeout(function () { timedOut = true; ctrl.abort(); }, TIMEOUT_MS);
+    setBusy(true);
+    $('loading').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+    fetch('/api/diary', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text }), signal: ctrl.signal
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok) {
+          var d = data && typeof data.detail === 'string' && data.detail.trim() ? data.detail.trim() : fallbackMessage(res.status);
+          throw { api: d, crisis: !!data && typeof data === 'object' && data.crisis === true };
+        }
+        var r = sanitizeResult(data);
+        if (!r) throw { api: '답변을 제대로 받지 못했어요. 한 번 더 시도해 주세요.' };
+        return r;
+      });
+    }).then(function (r) {
+      clearTimeout(timer);
+      var entry = { id: newId(), date: Date.now(), text: text, result: r };
+      var ok = commit(function (l) { return [entry].concat(l); });
+      if (!ok) entry.unsaved = true;
+      else { ta.value = ''; dropDraft(); }
+      setBusy(false);
+      renderList();
+      renderResult(entry, 'new');
+    }).catch(function (err) {
+      clearTimeout(timer);
+      setBusy(false);
+      if (err && err.api) showError(err.api, err.crisis);
+      else if (timedOut) showError('답변이 너무 오래 걸려요. 잠시 후 다시 시도해 주세요.', false, true);
+      else if (userCancelled) showInfo('그만두었어요. 쓴 글은 그대로 있어요.');
+      else showError(NET_MSG, false, true);
+    });
+  });
+  $('cancel').addEventListener('click', function () {
+    if (ctrl) { userCancelled = true; ctrl.abort(); }
+    setTimeout(function () { ta.focus(); }, 0);
+  });
+
+  /* 다른 탭에서 바뀐 기록을 목록에 반영 */
+  window.addEventListener('storage', function (ev) {
+    if (ev.key !== null && ev.key !== KEY) return;
+    if (!canSave) return;
+    var focusedId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.id : null;
+    entries = loadEntries();
+    if (currentPast && !entries.some(function (e) { return e.id === currentPast; })) {
+      clear(resultBox); currentPast = null; focusedId = null;
+      toast('다른 탭에서 이 일기를 지웠어요.');
+    }
+    renderList();
+    if (focusedId) { var b = document.querySelector('[data-id="' + CSS.escape(focusedId) + '"]'); if (b) b.focus(); }
+  });
+
+  renderList();
+  var restored = restoreDraft();
+  updateInput();
+  if (restored) toast('쓰다 만 글을 불러왔어요.');
+})();
+</script>
+</body>
+</html>
