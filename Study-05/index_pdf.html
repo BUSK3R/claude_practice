@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>PDF 요약 - AI 공감 다이어리</title>
+<style>
+:root {
+  --bg: #f6ecdc; --bg2: #efe1c9; --paper: #fffaf0; --paper-edge: #e6d6bb;
+  --ink: #3b2f24; --muted: #655545; --accent: #8a4f2e; --accent-hover: #743f22; --on-accent: #ffffff;
+  --sage: #e5ebd6; --sage-ink: #3f4d2c; --track: #eadfca;
+  --danger-ink: #7a2f22; --danger-bg: #fbe9e2; --warn-bg: #f3ecd9; --warn-edge: #8a6d3b;
+  --drop-bg: #fdf3e0; --focus: #1f5fbf;
+  --shadow: 0 6px 18px rgba(92, 64, 36, .14), 0 1px 3px rgba(92, 64, 36, .12);
+  --serif: "Iowan Old Style", "Palatino Linotype", "Batang", "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #241c15; --bg2: #2c231b; --paper: #342a20; --paper-edge: #4d3f2f;
+    --ink: #f3e7d4; --muted: #cdbca4; --accent: #f0b98a; --accent-hover: #f7cba5; --on-accent: #2a1d12;
+    --sage: #3a4230; --sage-ink: #dfe8c9; --track: #4a3d2e;
+    --danger-ink: #f5c9bb; --danger-bg: #4a2e27; --warn-bg: #3d3425; --warn-edge: #c7a45f;
+    --drop-bg: #3d3226; --focus: #8fbaff;
+    --shadow: 0 6px 18px rgba(0, 0, 0, .4);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.7;
+  background: radial-gradient(circle at 20% 0%, var(--bg2), transparent 55%), var(--bg);
+  min-height: 100vh; overflow-wrap: anywhere;
+}
+[hidden] { display: none !important; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+h1, h2 { font-family: var(--serif); font-weight: 700; line-height: 1.35; margin: 0; }
+header { text-align: center; padding: 16px 0 8px; }
+header h1 { font-size: 2rem; }
+.lead { margin: 8px 0 0; color: var(--muted); font-size: .98rem; }
+.nav { margin: 8px 0 0; font-size: .95rem; }
+.nav a { color: var(--accent); display: inline-block; padding: 8px 4px; }
+.paper {
+  background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 18px;
+  box-shadow: var(--shadow); padding: 20px 18px; margin-top: 20px;
+}
+.paper h2 { font-size: 1.25rem; margin-bottom: 10px; }
+.privacy {
+  margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; font-size: .96rem;
+  background: var(--warn-bg); border: 2px solid var(--warn-edge);
+}
+.dz {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 170px; padding: 20px 14px; text-align: center; cursor: pointer;
+  border: 3px dashed var(--paper-edge); border-radius: 16px; background: var(--paper);
+}
+.dz:hover, .dz.over { border-color: var(--accent); background: var(--drop-bg); }
+.dz:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; border-color: var(--focus); }
+.dz.disabled { cursor: not-allowed; opacity: .6; }
+.dz input {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0);
+}
+.dz .big { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; }
+.dz .sub { color: var(--muted); font-size: .95rem; }
+.dz .pick { display: inline-block; margin-top: 6px; padding: 10px 22px; min-height: 44px; border-radius: 999px; border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+.file { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--sage); color: var(--sage-ink); }
+.file p { margin: 0; }
+.file .name { font-weight: 700; }
+button { font: inherit; cursor: pointer; min-height: 48px; border-radius: 999px; padding: 8px 22px; }
+.primary { display: block; width: 100%; margin-top: 14px; border: 0; font-weight: 700; font-size: 1.05rem; background: var(--accent); color: var(--on-accent); }
+.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.primary:disabled { cursor: not-allowed; background: var(--track); color: var(--muted); }
+.ghost { background: transparent; color: var(--ink); border: 2px solid var(--paper-edge); }
+.ghost:hover:not(:disabled) { background: var(--bg2); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.row > button { flex: 1 1 140px; }
+.loading { margin-top: 16px; padding: 16px; border-radius: 14px; background: var(--sage); color: var(--sage-ink); text-align: center; }
+.loading p { margin: 0 0 6px; }
+.spin { display: inline-block; width: 28px; height: 28px; border-radius: 50%; border: 4px solid var(--sage-ink); border-right-color: transparent; animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; border-right-color: var(--sage-ink); } }
+.timer { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.error { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-ink); border: 2px solid var(--danger-ink); }
+.error p { margin: 0; }
+.error .next { margin-top: 4px; font-size: .95rem; }
+.info { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); border: 2px solid var(--warn-edge); font-size: .98rem; }
+.one-line { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; margin: 0 0 14px; }
+.points { margin: 0 0 14px; padding-left: 1.3em; }
+.points li { margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0 0 14px; padding: 0; }
+.chips li { padding: 4px 14px; border-radius: 999px; background: var(--sage); color: var(--sage-ink); font-size: .95rem; border: 1px solid var(--sage-ink); }
+.metaline { margin: 0; color: var(--muted); font-size: .92rem; }
+.sub-h { font-size: 1rem; margin: 0 0 6px; font-family: var(--serif); }
+.small { margin: 12px 0 0; color: var(--muted); font-size: .9rem; }
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>PDF 요약</h1>
+    <p class="lead">PDF를 올리면 AI가 한 줄 요약과 핵심 요점을 정리해 줘요.</p>
+    <p class="nav"><a href="/">일기 쓰러 가기</a></p>
+  </header>
+
+  <section class="paper" aria-labelledby="h-upload">
+    <h2 id="h-upload">PDF 올리기</h2>
+    <p class="privacy"><strong>문서 내용이 외부 AI 서비스(OpenRouter)로 전송됩니다.</strong> 개인정보나 기밀 문서는 올리지 마세요.</p>
+
+    <div class="info" id="fileNotice" role="alert" hidden>이 파일을 더블클릭해서 열면 요약할 수 없어요. 서버를 실행한 뒤 <strong>http://127.0.0.1:8000/index_pdf.html</strong> 주소로 접속해 주세요.</div>
+
+    <label class="dz" id="dz" for="file">
+      <input type="file" id="file" accept="application/pdf,.pdf" aria-describedby="dz-hint">
+      <span class="big">여기에 PDF를 끌어다 놓으세요</span>
+      <span class="sub" id="dz-hint">텍스트가 있는 PDF만, 10MB 이하, 50쪽 이하. 스캔본(이미지) PDF는 지원하지 않아요.</span>
+      <span class="pick" aria-hidden="true">파일 선택하기</span>
+    </label>
+
+    <div class="file" id="fileBox" hidden>
+      <p>선택한 파일: <span class="name" id="fileName"></span> <span id="fileSize"></span></p>
+    </div>
+
+    <button type="button" class="primary" id="go" disabled>요약하기</button>
+
+    <div class="loading" id="loading" hidden>
+      <p><span class="spin" aria-hidden="true"></span></p>
+      <p>요약하는 중이에요. <span class="timer" id="timer" aria-hidden="true">0초</span></p>
+      <p>보통 30~90초, 길면 2분 넘게 걸릴 수 있어요. 창을 닫지 말고 기다려 주세요.</p>
+      <button type="button" class="ghost" id="cancel">취소</button>
+    </div>
+
+    <div class="error" id="error" role="alert" hidden>
+      <p id="errMsg"></p>
+      <p class="next" id="errNext"></p>
+    </div>
+
+    <p class="small" id="status" role="status" aria-live="polite"></p>
+    <p class="small">하루 약 50회 무료 AI 한도를 일기와 함께 써요.</p>
+  </section>
+
+  <section class="paper" id="result" aria-labelledby="h-result" tabindex="-1" hidden>
+    <h2 id="h-result">요약 결과</h2>
+    <p class="one-line" id="oneLine"></p>
+    <h3 class="sub-h">핵심 요점</h3>
+    <ul class="points" id="points"></ul>
+    <h3 class="sub-h">키워드</h3>
+    <ul class="chips" id="chips"></ul>
+    <p class="metaline" id="metaLine"></p>
+    <div class="info" id="trunc" hidden></div>
+    <p class="small">무료 AI 모델이 만든 요약이라 틀릴 수 있어요. 중요한 내용은 원문으로 확인하세요.</p>
+    <div class="row">
+      <button type="button" class="ghost" id="copy">결과 복사</button>
+      <button type="button" class="ghost" id="again">다시 하기</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var MAX_BYTES = 10 * 1024 * 1024;
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    dz: $('dz'), file: $('file'), fileBox: $('fileBox'), fileName: $('fileName'), fileSize: $('fileSize'),
+    go: $('go'), loading: $('loading'), timer: $('timer'), cancel: $('cancel'),
+    error: $('error'), errMsg: $('errMsg'), errNext: $('errNext'), status: $('status'),
+    result: $('result'), oneLine: $('oneLine'), points: $('points'), chips: $('chips'),
+    metaLine: $('metaLine'), trunc: $('trunc'), copy: $('copy'), again: $('again')
+  };
+
+  // 서버가 준 code별 다음 행동 안내(문구 자체는 서버 detail을 쓴다)
+  var NEXT = {
+    not_pdf: '다른 PDF 파일을 선택해 주세요.',
+    bad_request: '파일을 다시 선택해 주세요.',
+    too_large: '파일을 줄이거나 다른 파일을 선택해 주세요.',
+    too_many_pages: '쪽수를 줄이거나 다른 파일을 선택해 주세요.',
+    no_text: '글자가 들어 있는 다른 PDF를 선택해 주세요.',
+    encrypted: '암호를 푼 파일을 선택해 주세요.',
+    corrupt: '다른 PDF 파일을 선택해 주세요.',
+    daily_limit: '내일 다시 시도해 주세요.',
+    busy: '잠시 후 "요약하기"를 다시 눌러 주세요.',
+    timeout: '더 짧은 문서로 시도하거나 다시 눌러 보세요.',
+    model_failed: '잠시 후 "요약하기"를 다시 눌러 주세요.',
+    server_config: '관리자에게 알려 주세요.',
+    server_error: '잠시 후 다시 시도해 주세요.',
+    not_implemented: '관리자에게 알려 주세요.'
+  };
+  var RETRY_SAME = { busy: 1, timeout: 1, model_failed: 1, server_error: 1 };
+
+  var selected = null;     // File
+  var controller = null;   // AbortController(요약 중에만)
+  var tick = null;
+  var lastText = '';       // 복사용 결과 텍스트(메모리에만 보관)
+
+  var onFile = location.protocol === 'file:';  // 서버 없이 파일로 연 경우: API 호출이 불가능하다
+  if (onFile) $('fileNotice').hidden = false;
+
+  function setStatus(msg) { el.status.textContent = msg || ''; }
+
+  function fmtSize(n) {
+    if (n >= 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + 'MB';
+    return Math.max(1, Math.round(n / 1024)) + 'KB';
+  }
+
+  function showError(msg, next) {
+    el.errMsg.textContent = msg;
+    el.errNext.textContent = next || '';
+    el.error.hidden = false;
+  }
+  function clearError() { el.error.hidden = true; el.errMsg.textContent = ''; el.errNext.textContent = ''; }
+
+  function busy() { return controller !== null; }
+
+  function refresh() {
+    var b = busy();
+    el.go.disabled = b || !selected;
+    el.file.disabled = b;
+    el.dz.classList.toggle('disabled', b);
+    el.loading.hidden = !b;
+    el.go.hidden = b;
+  }
+
+  function resetSelection() {
+    selected = null;
+    el.file.value = '';
+    el.fileBox.hidden = true;
+    el.fileName.textContent = '';
+    el.fileSize.textContent = '';
+    refresh();
+  }
+
+  // 화면 사전 검사는 빠른 안내용. 최종 판단은 서버.
+  function pick(files) {
+    if (busy() || !files || !files.length) return;
+    clearError();
+    var f = files[0];
+    var note = files.length > 1 ? ' 여러 파일 중 첫 번째 파일만 사용해요.' : '';
+    var isPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name || '');
+    if (!isPdf) {
+      resetSelection();
+      showError('PDF 파일이 아닙니다. PDF만 올릴 수 있어요.', '다른 PDF 파일을 선택해 주세요.');
+      return;
+    }
+    if (f.size > MAX_BYTES) {
+      resetSelection();
+      showError('파일이 너무 큽니다. 10MB 이하 PDF를 올려 주세요. (선택한 파일: ' + fmtSize(f.size) + ')', '다른 파일을 선택해 주세요.');
+      return;
+    }
+    if (f.size === 0) {
+      resetSelection();
+      showError('빈 파일입니다. 다른 PDF 파일을 선택해 주세요.', '');
+      return;
+    }
+    selected = f;
+    el.fileName.textContent = f.name;
+    el.fileSize.textContent = '(' + fmtSize(f.size) + ')';
+    el.fileBox.hidden = false;
+    el.result.hidden = true;
+    refresh();
+    setStatus('파일을 골랐어요.' + note + ' "요약하기"를 눌러 주세요.');
+  }
+
+  // 페이지 어디에 놓아도 브라우저가 파일을 열지 않게 한다. 놓으면 파일 선택으로 처리.
+  function hasFiles(e) {
+    var t = e.dataTransfer && e.dataTransfer.types;
+    if (!t) return false;
+    for (var i = 0; i < t.length; i++) if (t[i] === 'Files') return true;
+    return false;
+  }
+  window.addEventListener('dragover', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = busy() ? 'none' : 'copy';
+    if (!busy()) el.dz.classList.add('over');
+  });
+  window.addEventListener('dragleave', function (e) {
+    if (e.relatedTarget === null) el.dz.classList.remove('over');
+  });
+  window.addEventListener('drop', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    el.dz.classList.remove('over');
+    if (busy()) { setStatus('요약 중에는 파일을 바꿀 수 없어요. 취소한 뒤 다시 놓아 주세요.'); return; }
+    pick(e.dataTransfer.files);
+  });
+  el.file.addEventListener('change', function () { pick(el.file.files); });
+
+  function startTimer() {
+    var t0 = Date.now();
+    el.timer.textContent = '0초';
+    tick = setInterval(function () {
+      var s = Math.floor((Date.now() - t0) / 1000);
+      el.timer.textContent = s >= 60 ? Math.floor(s / 60) + '분 ' + (s % 60) + '초' : s + '초';
+    }, 1000);
+  }
+  function stopTimer() { if (tick) { clearInterval(tick); tick = null; } }
+
+  function isKorean(s) { return typeof s === 'string' && /[가-힣]/.test(s); }
+
+  function validStrList(a) {
+    if (!Array.isArray(a)) return false;
+    for (var i = 0; i < a.length; i++) if (typeof a[i] !== 'string') return false;
+    return true;
+  }
+
+  function render(d) {
+    el.oneLine.textContent = d.one_line;
+    el.points.textContent = '';
+    d.key_points.forEach(function (p) {
+      var li = document.createElement('li'); li.textContent = p; el.points.appendChild(li);
+    });
+    el.chips.textContent = '';
+    d.keywords.forEach(function (k) {
+      var li = document.createElement('li'); li.textContent = k; el.chips.appendChild(li);
+    });
+    var m = d.meta || {};
+    var parts = [];
+    if (Number.isFinite(m.pages)) parts.push('파일 ' + m.pages + '쪽');
+    if (Number.isFinite(m.total_chars)) parts.push('추출한 글자 ' + m.total_chars.toLocaleString('ko-KR') + '자');
+    el.metaLine.textContent = parts.join(' · ');
+    if (m.truncated === true && Number.isFinite(m.used_chars)) {
+      var pct = Number.isFinite(m.total_chars) && m.total_chars > 0 ? Math.round(m.used_chars / m.total_chars * 100) : null;
+      el.trunc.textContent = '긴 문서라 앞부분 ' + m.used_chars.toLocaleString('ko-KR') + '자' +
+        (pct !== null ? '(약 ' + pct + '%)' : '') + '만 요약했어요.';
+      el.trunc.hidden = false;
+    } else {
+      el.trunc.hidden = true; el.trunc.textContent = '';
+    }
+    lastText = '한 줄 요약\n' + d.one_line + '\n\n핵심 요점\n' +
+      d.key_points.map(function (p) { return '- ' + p; }).join('\n') +
+      '\n\n키워드\n' + d.keywords.join(', ');
+    el.result.hidden = false;
+    el.result.focus({ preventScroll: false });
+  }
+
+  async function summarize() {
+    if (busy() || !selected) return;
+    clearError();
+    if (onFile) { showError('서버 없이 열린 화면이라 요약할 수 없어요.', '서버를 실행하고 http://127.0.0.1:8000/index_pdf.html 로 접속해 주세요.'); return; }
+    controller = new AbortController();
+    var ctl = controller;
+    refresh();
+    startTimer();
+    setStatus('요약을 시작했어요. 시간이 걸릴 수 있어요.');
+    var fd = new FormData();
+    fd.append('file', selected);
+    try {
+      var res = await fetch('/api/pdf-summary', { method: 'POST', body: fd, signal: ctl.signal });
+      var data = null;
+      try { data = await res.json(); } catch (_) { data = null; }
+      if (!res.ok) {
+        var code = data && typeof data.code === 'string' ? data.code : '';
+        var detail = data && isKorean(data.detail) ? data.detail : '';
+        if (!detail) {
+          detail = data === null ? '서버 응답을 읽지 못했어요.' : '요약하지 못했어요.';
+          if (res.status === 413 || res.status === 411) detail = '파일이 너무 큽니다. 10MB 이하 PDF를 올려 주세요.';
+          if (res.status === 403) detail = '허용되지 않는 주소나 출처입니다.';
+        }
+        var next = NEXT[code] || (res.status === 403 ? '' : '잠시 후 다시 시도해 주세요.');
+        if (res.status === 413 || res.status === 411) next = NEXT.too_large;
+        showError(detail, next);
+        setStatus('요약하지 못했어요.');
+        if (!RETRY_SAME[code] && code && NEXT[code] && code !== 'daily_limit') {
+          // 파일 자체 문제: 같은 파일로 다시 보내도 소용없으니 선택을 비운다.
+          if (/^(not_pdf|bad_request|too_large|too_many_pages|no_text|encrypted|corrupt)$/.test(code)) resetSelection();
+        }
+        return;
+      }
+      if (!data || typeof data.one_line !== 'string' || !validStrList(data.key_points) || !validStrList(data.keywords)) {
+        showError('서버가 보낸 요약 형식을 읽지 못했어요.', '잠시 후 "요약하기"를 다시 눌러 주세요.');
+        setStatus('요약하지 못했어요.');
+        return;
+      }
+      render(data);
+      setStatus('요약이 끝났어요.');
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        setStatus('요약을 취소했어요. 같은 파일로 다시 시도할 수 있어요.');
+      } else {
+        showError('서버에 연결하지 못했어요. 인터넷이나 서버 실행 상태를 확인해 주세요.', '확인 후 "요약하기"를 다시 눌러 주세요.');
+        setStatus('연결에 실패했어요.');
+      }
+    } finally {
+      stopTimer();
+      controller = null;
+      refresh();
+    }
+  }
+
+  el.go.addEventListener('click', summarize);
+  el.cancel.addEventListener('click', function () { if (controller) controller.abort(); });
+
+  el.again.addEventListener('click', function () {
+    el.result.hidden = true;
+    lastText = '';
+    clearError();
+    resetSelection();
+    setStatus('새 PDF를 올려 주세요.');
+    el.file.focus();
+  });
+
+  el.copy.addEventListener('click', async function () {
+    if (!lastText) return;
+    try {
+      await navigator.clipboard.writeText(lastText);
+      setStatus('요약을 복사했어요.');
+    } catch (_) {
+      var ta = document.createElement('textarea');
+      ta.value = lastText; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (_e) { ok = false; }
+      document.body.removeChild(ta);
+      setStatus(ok ? '요약을 복사했어요.' : '복사하지 못했어요. 글자를 직접 선택해 복사해 주세요.');
+    }
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>

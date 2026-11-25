@@ -270,3 +270,40 @@ def apply_crisis_safety(result: dict, diary: str) -> dict:
         if "109" not in result["comfort"]:
             result["comfort"] = f"{result['comfort']} {CRISIS_NOTICE}".strip()
     return result
+
+
+# ---------------------------------------------------------------------------
+# PDF 요약 응답 검증 (일기 검증과 별개)
+# ---------------------------------------------------------------------------
+PDF_LIMITS = {"one_line": 100, "key_point": 150, "keyword": 20}
+PDF_KEY_POINTS = (3, 7)
+PDF_KEYWORDS = (3, 8)
+_MD_LEAD = re.compile(r"^\s*(?:[-*•·]+|\d+[.)])\s+")
+
+
+def _str_list(d: dict, key: str, limit: int, lo: int, hi: int) -> list:
+    raw = d[key]
+    if not isinstance(raw, list):
+        raise ValueError(f"{key} 목록 아님")
+    out = []
+    for v in raw:
+        if not isinstance(v, str):
+            raise ValueError(f"{key} 항목이 문자열 아님")
+        v = _MD_LEAD.sub("", v.strip()).strip()
+        if v and v not in out:  # 빈 항목·중복 제거
+            out.append(v)
+    if len(out) < lo:
+        raise ValueError(f"{key} 개수 부족")
+    return [_fit(v, limit) for v in out[:hi]]  # 초과 개수는 앞에서부터 상한까지만
+
+
+def validate_pdf_summary(d: dict) -> dict:
+    """PDF 요약 JSON 검증·정규화. 문제가 있으면 ValueError/KeyError(= 재요청 대상). 길이 초과는 잘라낸다."""
+    one_line = _fit(_text(d, "one_line"), PDF_LIMITS["one_line"])
+    points = _str_list(d, "key_points", PDF_LIMITS["key_point"], *PDF_KEY_POINTS)
+    keywords = _str_list(d, "keywords", PDF_LIMITS["keyword"], *PDF_KEYWORDS)
+    _check_korean(one_line, *points)  # 키워드는 영어 전문용어가 많아 제외
+    for v in (one_line, *points):  # 실측: 띄어쓰기 없이 붙여 쓴 응답이 나온 적 있음 -> 재요청 대상
+        if len(v) >= 20 and v.count(" ") / len(v) < 0.05:
+            raise ValueError("띄어쓰기 없음")
+    return {"one_line": one_line, "key_points": points, "keywords": keywords}

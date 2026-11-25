@@ -36,12 +36,16 @@ def _retry_after(r: httpx.Response) -> float | None:
         return None
 
 
-async def chat(client: httpx.AsyncClient, model: str, messages: list, max_tokens: int) -> tuple[str, dict]:
-    """모델 1회 호출. (content, usage) 반환. 빈 content나 finish_reason=length는 soft 실패."""
+async def chat(client: httpx.AsyncClient, model: str, messages: list, max_tokens: int,
+               reasoning: dict | None = None) -> tuple[str, dict]:
+    """모델 1회 호출. (content, usage) 반환. 빈 content나 finish_reason=length는 soft 실패.
+    reasoning: OpenRouter 추론 옵션(예: {"effort": "low"}). 지원하지 않는 모델은 무시한다."""
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise UpstreamError(401, "키 없음")
     body = {"model": model, "max_tokens": max_tokens, "messages": messages}
+    if reasoning:
+        body["reasoning"] = reasoning
     r = await client.post(API_URL, json=body, headers={"Authorization": f"Bearer {key}"})
     if r.status_code == 429 and "free-models-per-day" in r.text:
         raise UpstreamError(429, "daily")  # 일일 무료 한도: 모델을 바꿔도 같은 한도라 재시도 무의미

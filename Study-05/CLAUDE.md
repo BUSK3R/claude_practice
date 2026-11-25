@@ -27,3 +27,10 @@ AI 공감 다이어리: 일기를 쓰면 AI가 감정을 분석하고 공감·�
 - 모델 출력은 신뢰하지 않고 서버에서 스키마 검증. 화면은 반드시 `textContent`로 출력.
 - 위기 키워드가 있거나 모델이 `crisis:true`면 서버가 `comfort`에 109/112/119 안내를 보장한다.
 - OpenRouter 무료 계정은 일일 한도(50회)가 있고 초과하면 429 `free-models-per-day`. 이때는 재시도 없이 즉시 안내한다.
+
+## PDF 요약 기능 (`index_pdf.html`)
+- 화면: 루트의 `index_pdf.html`(서버가 `GET /index_pdf.html`로 서빙). `file://`로 열면 요약이 동작하지 않는다(키는 서버에만 있음). 서버를 켜고 http://127.0.0.1:8000/index_pdf.html 로 연다. 기획·API 계약은 `docs/PRD_pdf.md`.
+- `POST /api/pdf-summary`(multipart, 필드 `file`): `app/pdf_extract.py`가 검증·추출(pymupdf, AGPL 라이선스라 공개 배포 시 확인), `main.py`의 `summarize_text`가 요약. 일기와 같은 모델·동시 3개 제한·일일 50회 한도를 공유한다.
+- 본문 크기 상한은 이 경로만 10MB(+여유), `/api/diary`는 32KB 유지. 파일은 디스크에 저장하지 않는다. 오류는 `{"detail","code"}`.
+- 추출 텍스트는 앞 8,000자만 요약한다(`MAX_USED_CHARS`). 12,000자일 때 기본 모델이 length로 두 번 잘려 호출 3회·103초 또는 150초 타임아웃이 났다. PDF 호출은 `reasoning: {"effort":"low"}`를 보낸다(일기는 안 보냄). 8,000자+low 조합은 15,041자 문서 실측 1회에서 호출 1회·29초로 성공했다. 어느 쪽이 효과였는지는 분리 측정 못 했고 표본이 1건이다.
+- 위기 키워드 안전망은 PDF에 적용하지 않는다(문서 요약이라 비목표).
