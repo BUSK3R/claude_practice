@@ -38,6 +38,18 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ## PDF 요약
 서버를 켠 뒤 http://127.0.0.1:8000/index_pdf.html 로 접속해 PDF를 끌어다 놓거나 선택하면 한국어 요약이 나옵니다. 일기와 같은 모델·무료 한도(하루 50회, 동시 3개)를 함께 씁니다.
 
+### PDF 요약 실행 화면
+
+이 화면들은 일기 화면과 달리 모델 응답을 재생하지 않고 실제 OpenRouter 무료 모델을 한 번 호출해 찍었습니다. 문서는 예시로 직접 만든 짧은 PDF입니다.
+
+| 시작 | 파일 선택 후 |
+| :---: | :---: |
+| <img src="screenshots/05-pdf-start.png" alt="PDF 요약 시작 화면" width="360"> | <img src="screenshots/06-pdf-selected.png" alt="PDF를 선택한 화면" width="360"> |
+
+| 요약 결과 | 글자가 없는 PDF를 올렸을 때 |
+| :---: | :---: |
+| <img src="screenshots/07-pdf-result.png" alt="PDF 요약 결과 화면" width="360"> | <img src="screenshots/08-pdf-error.png" alt="스캔본 PDF 오류 안내 화면" width="360"> |
+
 - 올린 파일은 서버가 디스크에 저장하지 않고, 텍스트만 추출해 요약합니다.
 - 제한: 10MB 이하, 50쪽 이하. 글자를 추출할 수 없는 스캔본(이미지) PDF는 요약되지 않습니다.
 - 추출한 텍스트의 앞 8,000자만 요약합니다. 더 긴 문서는 화면에 일부만 요약했다는 안내가 뜹니다.
